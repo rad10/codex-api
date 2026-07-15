@@ -1,0 +1,17 @@
+[package]
+name = "codex-api-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { version = "0.4.45", default-features = false }
+schemars = { version = "1.2.1", optional = true, default-features = false, features = ["chrono04", "derive", "url2", "uuid1"] }
+serde = { version = "1.0.228", default-features = false, features = ["derive"], optional = true }
+ts-rs = { version = "12.0.1", optional = true, default-features = false, features = ["chrono-impl", "serde-compat", "url-impl", "uuid-impl"] }
+url = { version = "2.5.8", default-features = false }
+uuid = { version = "1.23.5", default-features = false, features = ["v4"] }
+
+[features]
+schemars = ["serde", "dep:schemars"]
+ts = ["dep:ts-rs"]
+serde = ["dep:serde", "url/serde", "uuid/serde", "chrono/serde"]
