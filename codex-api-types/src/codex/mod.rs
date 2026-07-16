@@ -3,6 +3,7 @@
 //! These types are serialized across core, TUI, app-server, and SDK boundaries, so field defaults
 //! are used to preserve compatibility when older payloads omit newly introduced attributes.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
 
@@ -15,6 +16,7 @@ use serde::de::Error;
 use ts_rs::TS;
 
 use crate::agent_path::AgentPath;
+use crate::response_item::ResponseItem;
 use crate::thread_id::ThreadId;
 
 const PERSONALITY_PLACEHOLDER: &str = "{{ personality }}";
@@ -900,6 +902,108 @@ impl Product {
     }
 }
 
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub struct ResponsesApiRequest {
+    pub model: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub instructions: String,
+    pub input: Vec<ResponseItem>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<serde_json::Value>>,
+    pub tool_choice: String,
+    pub parallel_tool_calls: bool,
+    pub reasoning: Option<Reasoning>,
+    pub store: bool,
+    pub stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream_options: Option<StreamOptions>,
+    pub include: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub service_tier: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prompt_cache_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<TextControls>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_metadata: Option<HashMap<String, String>>,
+}
+
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub struct Reasoning {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effort: Option<ReasoningEffort>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub summary: Option<ReasoningSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context: Option<ReasoningContext>,
+}
+
+#[derive(Debug, Serialize, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ReasoningContext {
+    Auto,
+    CurrentTurn,
+    AllTurns,
+}
+
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub struct StreamOptions {
+    pub reasoning_summary_delivery: ReasoningSummaryDelivery,
+}
+
+#[derive(Debug, Serialize, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ReasoningSummaryDelivery {
+    SequentialCutoff,
+}
+
+/// Controls the `text` field for the Responses API, combining verbosity and
+/// optional JSON schema output formatting.
+#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+pub struct TextControls {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verbosity: Option<OpenAiVerbosity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<TextFormat>,
+}
+
+#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum OpenAiVerbosity {
+    Low,
+    #[default]
+    Medium,
+    High,
+}
+
+#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+pub struct TextFormat {
+    /// Format type used by the OpenAI text controls.
+    pub r#type: TextFormatType,
+    /// When true, the server is expected to strictly validate responses.
+    pub strict: bool,
+    /// JSON schema for the desired output.
+    pub schema: serde_json::Value,
+    /// Friendly name for the format, used in telemetry/debugging.
+    pub name: String,
+}
+
+#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum TextFormatType {
+    #[default]
+    JsonSchema,
+}
+
+impl From<Verbosity> for OpenAiVerbosity {
+    fn from(v: Verbosity) -> Self {
+        match v {
+            Verbosity::Low => OpenAiVerbosity::Low,
+            Verbosity::Medium => OpenAiVerbosity::Medium,
+            Verbosity::High => OpenAiVerbosity::High,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
