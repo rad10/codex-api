@@ -1,9 +1,6 @@
 use schemars::JsonSchema;
-use serde::Deserialize;
-use serde::Serialize;
-use std::fmt;
-use std::ops::Deref;
-use std::str::FromStr;
+use serde::{Deserialize, Serialize};
+use std::{fmt, ops::Deref, str::FromStr};
 use ts_rs::TS;
 
 #[derive(

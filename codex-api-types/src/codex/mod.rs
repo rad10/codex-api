@@ -3,16 +3,10 @@
 //! These types are serialized across core, TUI, app-server, and SDK boundaries, so field defaults
 //! are used to preserve compatibility when older payloads omit newly introduced attributes.
 
-use std::collections::HashMap;
-use std::fmt;
-use std::str::FromStr;
+use std::{collections::HashMap, fmt, str::FromStr};
 
 use schemars::JsonSchema;
-use serde::Deserialize;
-use serde::Deserializer;
-use serde::Serialize;
-use serde::Serializer;
-use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as _};
 use ts_rs::TS;
 
 use crate::agent_path::AgentPath;

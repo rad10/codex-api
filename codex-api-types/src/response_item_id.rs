@@ -1,9 +1,7 @@
-use std::fmt;
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 use schemars::JsonSchema;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 /// A Responses API item ID. New IDs require an explicit prefix; deserialization
