@@ -1,8 +1,14 @@
-use std::borrow::Borrow;
+use std::{
+    borrow::Borrow,
+    sync::{Arc, OnceLock},
+};
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
-use codex_api_types::codex::ModelsResponse;
+#[cfg(feature = "sync")]
+use codex_api_types::codex::ResponsesApiRequest;
+use codex_api_types::codex::{ModelsResponse, SessionSource};
+use http::HeaderMap;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
@@ -52,9 +58,11 @@ pub trait CodexSync: ApiCommon + AnalyticsEventsSync {
         Self::Response: TryInto<ModelsResponse>;
 
     /// Collects a response from ChatGPT's API
-    fn codex_responses(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>;
+    fn codex_responses(
+        &self,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Self::Response, Self::ApiError>;
 }
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
@@ -84,9 +92,9 @@ pub trait CodexAsync: ApiCommon + AnalyticsEventsAsync {
     /// Collects a response from ChatGPT's API
     fn codex_responses(
         &self,
-    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
-    where
-        Self::Response: TryInto<String>;
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -100,11 +108,12 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
     }
 
     /// Collects a response from ChatGPT's API
-    async fn responses(&self) -> Result<C::Response, C::ApiError>
-    where
-        C::Response: TryInto<String>,
-    {
-        C::codex_responses(self.borrow()).await
+    async fn responses(
+        &self,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<C::Response, C::ApiError> {
+        C::codex_responses(self.borrow(), request, options).await
     }
 }
 
@@ -117,9 +126,11 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
         Self::Response: TryInto<ModelsResponse>;
 
     /// Collects a response from ChatGPT's API
-    async fn codex_responses(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>;
+    async fn codex_responses(
+        &self,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Self::Response, Self::ApiError>;
 }
 
 #[cfg(feature = "boxed")]
@@ -132,11 +143,12 @@ impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
         <C as CodexAsync>::codex_models(&self).await
     }
 
-    async fn codex_responses(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>,
-    {
-        <C as CodexAsync>::codex_responses(&self).await
+    async fn codex_responses(
+        &self,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Self::Response, Self::ApiError> {
+        <C as CodexAsync>::codex_responses(&self, request, options).await
     }
 }
 
@@ -146,6 +158,5 @@ pub struct ResponsesOptions {
     pub thread_id: Option<String>,
     pub session_source: Option<SessionSource>,
     pub extra_headers: HeaderMap,
-    pub compression: Compression,
     pub turn_state: Option<Arc<OnceLock<String>>>,
 }
