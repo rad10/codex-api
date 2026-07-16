@@ -1,17 +1,21 @@
-use std::{fmt, ops::Deref};
+use std::{borrow::Borrow, fmt, ops::Deref};
 
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 
 /// A Responses API item ID. New IDs require an explicit prefix; deserialization
 /// remains permissive so legacy rollouts can still be read.
-#[derive(
-    Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, JsonSchema, TS,
-)]
-#[serde(transparent)]
-#[schemars(with = "String")]
-#[ts(type = "string")]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+#[cfg_attr(feature = "schemars", schemars(with = "String"))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 pub struct ResponseItemId(String);
 
 impl ResponseItemId {

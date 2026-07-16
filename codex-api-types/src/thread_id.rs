@@ -1,12 +1,18 @@
-use std::{borrow::Cow, fmt::Display};
+#[cfg(feature = "schemars")]
+use std::borrow::Cow;
+use std::{fmt::Display, str::FromStr};
 
+#[cfg(feature = "schemars")]
 use schemars::{JsonSchema, Schema, SchemaGenerator};
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, TS, Hash)]
-#[ts(type = "string")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 /// Identifier for a Codex thread.
 ///
 /// Codex-generated thread IDs are UUIDv7, and some use cases rely on that.
@@ -70,6 +76,7 @@ impl Display for ThreadId {
     }
 }
 
+#[cfg(feature = "serde")]
 impl Serialize for ThreadId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -79,15 +86,19 @@ impl Serialize for ThreadId {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for ThreadId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        Ok(Self { uuid: Uuid::deserialize(deserializer)? })
+        Ok(Self {
+            uuid: Uuid::deserialize(deserializer)?,
+        })
     }
 }
 
+#[cfg(feature = "schemars")]
 impl JsonSchema for ThreadId {
     fn schema_name() -> Cow<'static, str> {
         Cow::Borrowed("ThreadId")

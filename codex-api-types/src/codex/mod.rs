@@ -5,8 +5,11 @@
 
 use std::{collections::HashMap, fmt, str::FromStr};
 
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as _};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 
 use crate::agent_path::AgentPath;
@@ -23,9 +26,14 @@ pub const SPEED_TIER_FAST: &str = "fast";
 pub const SERVICE_TIER_DEFAULT_REQUEST_VALUE: &str = "default";
 
 /// See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning
-#[derive(Debug, Default, Clone, PartialEq, Eq, TS, Hash, JsonSchema)]
-#[ts(type = "string")]
-#[schemars(description = "A non-empty reasoning effort value advertised by the model.")]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
+#[cfg_attr(
+    feature = "schemars",
+    schemars(description = "A non-empty reasoning effort value advertised by the model.")
+)]
 pub enum ReasoningEffort {
     None,
     Minimal,
@@ -63,6 +71,7 @@ impl fmt::Display for ReasoningEffort {
     }
 }
 
+#[cfg(feature = "serde")]
 impl Serialize for ReasoningEffort {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -72,6 +81,7 @@ impl Serialize for ReasoningEffort {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for ReasoningEffort {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -103,8 +113,11 @@ impl FromStr for ReasoningEffort {
 }
 
 /// Canonical user-input modality tags advertised by a model.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, JsonSchema, TS, Hash)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum InputModality {
     /// Plain text turns and tool payloads.
     Text,
@@ -121,7 +134,10 @@ pub fn default_input_modalities() -> Vec<InputModality> {
 }
 
 /// A reasoning effort option that can be surfaced for a model.
-#[derive(Debug, Clone, Deserialize, Serialize, TS, JsonSchema, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ReasoningEffortPreset {
     /// Effort level that the model supports.
     pub effort: ReasoningEffort,
@@ -129,7 +145,10 @@ pub struct ReasoningEffortPreset {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelUpgrade {
     pub id: String,
     pub migration_config_key: String,
@@ -138,12 +157,18 @@ pub struct ModelUpgrade {
     pub migration_markdown: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS, JsonSchema, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelAvailabilityNux {
     pub message: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS, JsonSchema, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelServiceTier {
     pub id: String,
     pub name: String,
@@ -151,7 +176,10 @@ pub struct ModelServiceTier {
 }
 
 /// Metadata describing a Codex-supported model.
-#[derive(Debug, Clone, Deserialize, Serialize, TS, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelPreset {
     /// Stable identifier for the preset.
     pub id: String,
@@ -166,16 +194,19 @@ pub struct ModelPreset {
     /// Supported reasoning effort options.
     pub supported_reasoning_efforts: Vec<ReasoningEffortPreset>,
     /// Whether this model supports personality-specific instructions.
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub supports_personality: bool,
     /// Deprecated: use `service_tiers` instead.
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub additional_speed_tiers: Vec<String>,
     /// Service tiers this model can run with.
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub service_tiers: Vec<ModelServiceTier>,
     /// Catalog default service tier id for this model.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub default_service_tier: Option<String>,
     /// Whether this is the default model for new users.
     pub is_default: bool,
@@ -184,22 +215,28 @@ pub struct ModelPreset {
     /// Whether this preset should appear in the picker UI.
     pub show_in_picker: bool,
     /// Multi-agent backend selected when this model starts a new thread.
-    #[serde(default, skip_serializing, skip_deserializing)]
-    #[schemars(skip)]
-    #[ts(skip)]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing, skip_deserializing)
+    )]
+    #[cfg_attr(feature = "schemars", schemars(skip))]
+    #[cfg_attr(feature = "ts", ts(skip))]
     pub multi_agent_version: Option<MultiAgentVersion>,
     /// Availability NUX shown when this preset becomes accessible to the user.
     pub availability_nux: Option<ModelAvailabilityNux>,
     /// whether this model is supported in the api
     pub supported_in_api: bool,
     /// Input modalities accepted when composing user turns for this preset.
-    #[serde(default = "default_input_modalities")]
+    #[cfg_attr(feature = "serde", serde(default = "default_input_modalities"))]
     pub input_modalities: Vec<InputModality>,
 }
 
 /// Visibility of a model in the picker or APIs.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum ModelVisibility {
     List,
     Hide,
@@ -207,8 +244,11 @@ pub enum ModelVisibility {
 }
 
 /// Shell execution capability for a model.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema, Hash)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum ConfigShellToolType {
     Default,
     Local,
@@ -217,16 +257,20 @@ pub enum ConfigShellToolType {
     ShellCommand,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, TS, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum ApplyPatchToolType {
     Freeform,
 }
 
-#[derive(
-    Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, TS, JsonSchema, Default,
-)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum WebSearchToolType {
     #[default]
     Text,
@@ -234,22 +278,31 @@ pub enum WebSearchToolType {
 }
 
 /// Server-provided truncation policy metadata for a model.
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum TruncationMode {
     Bytes,
     Tokens,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum ToolMode {
     Direct,
     CodeMode,
     CodeModeOnly,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct TruncationPolicyConfig {
     pub mode: TruncationMode,
     pub limit: i64,
@@ -272,97 +325,145 @@ impl TruncationPolicyConfig {
 }
 
 /// Semantic version triple encoded as an array in JSON (e.g. [0, 62, 0]).
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ClientVersion(pub i32, pub i32, pub i32);
 
+#[cfg(feature = "serde")]
 const fn default_effective_context_window_percent() -> i64 {
     95
 }
 
+#[cfg(feature = "serde")]
 const fn default_true() -> bool {
     true
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[cfg(feature = "serde")]
 const fn is_true(value: &bool) -> bool {
     *value
 }
 
 /// Model metadata returned by the Codex backend `/models` endpoint.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelInfo {
     pub slug: String,
     pub display_name: String,
     pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub default_reasoning_level: Option<ReasoningEffort>,
     pub supported_reasoning_levels: Vec<ReasoningEffortPreset>,
     pub shell_type: ConfigShellToolType,
     pub visibility: ModelVisibility,
     pub supported_in_api: bool,
     pub priority: i32,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub additional_speed_tiers: Vec<String>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub service_tiers: Vec<ModelServiceTier>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub default_service_tier: Option<String>,
     pub availability_nux: Option<ModelAvailabilityNux>,
     pub upgrade: Option<ModelInfoUpgrade>,
     pub base_instructions: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub model_messages: Option<ModelMessages>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub include_skills_usage_instructions: bool,
     /// Whether the model accepts the Responses API `reasoning.summary` parameter.
-    #[serde(default = "default_true", skip_serializing_if = "is_true")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default = "default_true", skip_serializing_if = "is_true")
+    )]
     pub supports_reasoning_summary_parameter: bool,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub default_reasoning_summary: ReasoningSummary,
     pub support_verbosity: bool,
     pub default_verbosity: Option<Verbosity>,
     pub apply_patch_tool_type: Option<ApplyPatchToolType>,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub web_search_tool_type: WebSearchToolType,
     pub truncation_policy: TruncationPolicyConfig,
     pub supports_parallel_tool_calls: bool,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub supports_image_detail_original: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub context_window: Option<i64>,
     /// Maximum context window allowed for config overrides.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub max_context_window: Option<i64>,
     /// Token threshold for automatic compaction. When omitted, core derives it
     /// from `context_window` (90%). When provided, core clamps it to 90% of the
     /// context window when available.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub auto_compact_token_limit: Option<i64>,
     /// Opaque identifier for compaction-compatible model configurations.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub comp_hash: Option<String>,
     /// Percentage of the context window considered usable for inputs, after
     /// reserving headroom for system prompts, tool overhead, and model output.
-    #[serde(default = "default_effective_context_window_percent")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default = "default_effective_context_window_percent")
+    )]
     pub effective_context_window_percent: i64,
     pub experimental_supported_tools: Vec<String>,
     /// Input modalities accepted by the backend for this model.
-    #[serde(default = "default_input_modalities")]
+    #[cfg_attr(feature = "serde", serde(default = "default_input_modalities"))]
     pub input_modalities: Vec<InputModality>,
     /// Internal-only marker set by core when a model slug resolved to fallback metadata.
-    #[serde(default, skip_serializing, skip_deserializing)]
-    #[schemars(skip)]
-    #[ts(skip)]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing, skip_deserializing)
+    )]
+    #[cfg_attr(feature = "schemars", schemars(skip))]
+    #[cfg_attr(feature = "ts", ts(skip))]
     pub used_fallback_model_metadata: bool,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub supports_search_tool: bool,
-    #[serde(default)]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub use_responses_lite: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub auto_review_model_override: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub tool_mode: Option<ToolMode>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
     pub multi_agent_version: Option<MultiAgentVersion>,
 }
 
@@ -407,7 +508,10 @@ impl ModelInfo {
 
 /// A strongly-typed template for assembling model instructions and developer messages. If
 /// instructions_* is populated and valid, it will override base_instructions.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelMessages {
     pub instructions_template: Option<String>,
     pub instructions_variables: Option<ModelInstructionsVariables>,
@@ -416,19 +520,28 @@ pub struct ModelMessages {
     pub permissions: Option<PermissionMessages>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ApprovalMessages {
     pub on_request: Option<String>,
     pub on_request_auto_review: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct AutoReviewMessages {
     pub policy: Option<String>,
     pub policy_template: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct PermissionMessages {
     pub danger_full_access: Option<String>,
     pub workspace_write: Option<String>,
@@ -458,7 +571,10 @@ impl ModelMessages {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelInstructionsVariables {
     pub personality_default: Option<String>,
     pub personality_friendly: Option<String>,
@@ -485,7 +601,10 @@ impl ModelInstructionsVariables {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelInfoUpgrade {
     pub model: String,
     pub migration_markdown: String,
@@ -501,7 +620,10 @@ impl From<&ModelUpgrade> for ModelInfoUpgrade {
 }
 
 /// Response wrapper for `/models`.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct ModelsResponse {
     pub models: Vec<ModelInfo>,
 }
@@ -597,8 +719,11 @@ impl ModelPreset {
 /// A summary of the reasoning performed by the model. This can be useful for
 /// debugging and understanding the model's reasoning process.
 /// See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#reasoning-summaries
-#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum ReasoningSummary {
     #[default]
     Auto,
@@ -610,10 +735,11 @@ pub enum ReasoningSummary {
 
 /// Controls output length/detail on GPT-5 models via the Responses API.
 /// Serialized with lowercase values to match the OpenAI API.
-#[derive(
-    Hash, Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq, JsonSchema, TS,
-)]
-#[serde(rename_all = "lowercase")]
+#[derive(Hash, Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum Verbosity {
     Low,
     #[default]
@@ -621,18 +747,22 @@ pub enum Verbosity {
     High,
 }
 
-#[derive(
-    Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, JsonSchema, TS, PartialOrd, Ord,
-)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum Personality {
     None,
     Friendly,
     Pragmatic,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum ServiceTier {
     Fast,
     Flex,
@@ -655,18 +785,24 @@ impl ServiceTier {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
-#[ts(rename_all = "snake_case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
 pub enum MultiAgentVersion {
     Disabled,
     V1,
     V2,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS, Default)]
-#[serde(rename_all = "lowercase")]
-#[ts(rename_all = "lowercase")]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "lowercase"))]
 pub enum SessionSource {
     Cli,
     #[default]
@@ -676,31 +812,37 @@ pub enum SessionSource {
     Custom(String),
     Internal(InternalSessionSource),
     SubAgent(SubAgentSource),
-    #[serde(other)]
+    #[cfg_attr(feature = "serde", serde(other))]
     Unknown,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
-#[ts(rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
 pub enum InternalSessionSource {
     MemoryConsolidation,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
-#[ts(rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
 pub enum SubAgentSource {
     Review,
     Compact,
     ThreadSpawn {
         parent_thread_id: ThreadId,
         depth: i32,
-        #[serde(default)]
+        #[cfg_attr(feature = "serde", serde(default))]
         agent_path: Option<AgentPath>,
-        #[serde(default)]
+        #[cfg_attr(feature = "serde", serde(default))]
         agent_nickname: Option<String>,
-        #[serde(default, alias = "agent_type")]
+        #[cfg_attr(feature = "serde", serde(default, alias = "agent_type"))]
         agent_role: Option<String>,
     },
     MemoryConsolidation,
@@ -861,15 +1003,18 @@ impl fmt::Display for InternalSessionSource {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, TS)]
-#[serde(rename_all = "lowercase")]
-#[ts(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "lowercase"))]
 pub enum Product {
-    #[serde(alias = "CHATGPT")]
+    #[cfg_attr(feature = "serde", serde(alias = "CHATGPT"))]
     Chatgpt,
-    #[serde(alias = "CODEX")]
+    #[cfg_attr(feature = "serde", serde(alias = "CODEX"))]
     Codex,
-    #[serde(alias = "ATLAS")]
+    #[cfg_attr(feature = "serde", serde(alias = "ATLAS"))]
     Atlas,
 }
 impl Product {
@@ -896,73 +1041,80 @@ impl Product {
     }
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ResponsesApiRequest {
     pub model: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "String::is_empty"))]
     pub instructions: String,
     pub input: Vec<ResponseItem>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub tools: Option<Vec<serde_json::Value>>,
     pub tool_choice: String,
     pub parallel_tool_calls: bool,
     pub reasoning: Option<Reasoning>,
     pub store: bool,
     pub stream: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub stream_options: Option<StreamOptions>,
     pub include: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub service_tier: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub prompt_cache_key: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub text: Option<TextControls>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub client_metadata: Option<HashMap<String, String>>,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Reasoning {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub effort: Option<ReasoningEffort>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub summary: Option<ReasoningSummary>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub context: Option<ReasoningContext>,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum ReasoningContext {
     Auto,
     CurrentTurn,
     AllTurns,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StreamOptions {
     pub reasoning_summary_delivery: ReasoningSummaryDelivery,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum ReasoningSummaryDelivery {
     SequentialCutoff,
 }
 
 /// Controls the `text` field for the Responses API, combining verbosity and
 /// optional JSON schema output formatting.
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TextControls {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub verbosity: Option<OpenAiVerbosity>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub format: Option<TextFormat>,
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum OpenAiVerbosity {
     Low,
     #[default]
@@ -970,7 +1122,8 @@ pub enum OpenAiVerbosity {
     High,
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TextFormat {
     /// Format type used by the OpenAI text controls.
     pub r#type: TextFormatType,
@@ -982,8 +1135,9 @@ pub struct TextFormat {
     pub name: String,
 }
 
-#[derive(Debug, Serialize, Default, Clone, PartialEq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum TextFormatType {
     #[default]
     JsonSchema,
@@ -1002,8 +1156,8 @@ impl From<Verbosity> for OpenAiVerbosity {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::from_str;
-    use serde_json::to_string;
+    #[cfg(feature = "serde")]
+    use serde_json::{from_str, to_string};
 
     fn test_model(spec: Option<ModelMessages>) -> ModelInfo {
         ModelInfo {
@@ -1058,6 +1212,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn model_messages_deserialize_without_approvals() {
         let messages: ModelMessages =
             from_str(r#"{"instructions_template":null,"instructions_variables":null}"#)
@@ -1068,6 +1223,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn approval_messages_preserve_missing_and_empty_values() {
         let messages: ModelMessages = from_str(
             r#"{
@@ -1090,6 +1246,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn auto_review_messages_preserve_missing_and_empty_template_values() {
         let missing_template: ModelMessages = from_str(
             r#"{
@@ -1130,6 +1287,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn permission_messages_preserve_missing_and_empty_values() {
         let messages: ModelMessages = from_str(
             r#"{
@@ -1153,6 +1311,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn reasoning_effort_accepts_known_and_custom_values() {
         let custom = ReasoningEffort::Custom("future".to_string());
         let deserialized = from_str::<ReasoningEffort>(r#""future""#)
@@ -1363,6 +1522,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn model_info_defaults_availability_nux_to_none_when_omitted() {
         let model: ModelInfo = serde_json::from_value(serde_json::json!({
             "slug": "test-model",
@@ -1407,6 +1567,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn model_info_deserializes_known_tool_mode() {
         let mut value =
             serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
@@ -1423,6 +1584,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn model_info_treats_unknown_tool_mode_as_omitted() {
         let mut value =
             serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
@@ -1444,6 +1606,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn model_info_treats_unknown_multi_agent_version_as_omitted() {
         let mut value =
             serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");

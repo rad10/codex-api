@@ -27,6 +27,7 @@ fn accepts_server_ids_verbatim() {
 }
 
 #[test]
+#[cfg(feature = "serde")]
 fn deserializes_arbitrary_ids_as_strings() {
     let id: ResponseItemId = serde_json::from_str("\"legacy-id\"").expect("id");
     assert_eq!(id.as_str(), "legacy-id");
@@ -37,6 +38,7 @@ fn deserializes_arbitrary_ids_as_strings() {
 }
 
 #[test]
+#[cfg(feature = "serde")]
 fn recognizes_non_empty_prefix_and_suffix() {
     for (value, expected) in [
         ("msg_test", true),

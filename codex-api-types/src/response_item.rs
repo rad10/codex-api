@@ -1,105 +1,162 @@
 use std::collections::HashMap;
 
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 
 use crate::response_item_id::ResponseItemId;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum ResponseItem {
-    #[schemars(skip)]
-    #[ts(skip)]
+    #[cfg_attr(feature = "schemars", schemars(skip))]
+    #[cfg_attr(feature = "ts", ts(skip))]
     AdditionalTools {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
         id: Option<ResponseItemId>,
         role: String,
         tools: Vec<serde_json::Value>,
     },
     Message {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         role: String,
         content: Vec<ContentItem>,
         // Optional output-message phase (for example: "commentary", "final_answer").
         // Availability varies by provider/model, so downstream consumers must
         // preserve fallback behavior when this is absent.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         phase: Option<MessagePhase>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     AgentMessage {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         author: String,
         recipient: String,
         content: Vec<AgentMessageInputContent>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     Reasoning {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         summary: Vec<ReasoningItemReasoningSummary>,
-        #[serde(default, skip_serializing_if = "should_serialize_reasoning_content")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "should_serialize_reasoning_content")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         content: Option<Vec<ReasoningItemContent>>,
         encrypted_content: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     LocalShellCall {
         /// Legacy id field retained for compatibility with older payloads.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         /// Set when using the Responses API.
         call_id: Option<String>,
         status: LocalShellStatus,
         action: LocalShellAction,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     FunctionCall {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         namespace: Option<String>,
         // The Responses API returns the function call arguments as a *string* that contains
         // JSON, not as an already‑parsed object. We keep it as a raw string here and let
         // Session::handle_function_call parse it into a Value.
         arguments: String,
         call_id: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     ToolSearchCall {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         call_id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         status: Option<String>,
         execution: String,
-        #[ts(type = "unknown")]
+        #[cfg_attr(feature = "ts", ts(type = "unknown"))]
         arguments: serde_json::Value,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     // NOTE: The `output` field for `function_call_output` uses a dedicated payload type with
@@ -108,64 +165,97 @@ pub enum ResponseItem {
     //   - an array of structured content items (`content_items`)
     // We keep this behavior centralized in `FunctionCallOutputPayload`.
     FunctionCallOutput {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         call_id: String,
-        #[ts(as = "FunctionCallOutputBody")]
-        #[schemars(with = "FunctionCallOutputBody")]
+        #[cfg_attr(feature = "ts", ts(as = "FunctionCallOutputBody"))]
+        #[cfg_attr(feature = "schemars", schemars(with = "FunctionCallOutputBody"))]
         output: FunctionCallOutputPayload,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     CustomToolCall {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         status: Option<String>,
 
         call_id: String,
         name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         namespace: Option<String>,
         input: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     // `custom_tool_call_output.output` uses the same wire encoding as
     // `function_call_output.output` so freeform tools can return either plain
     // text or structured content items.
     CustomToolCallOutput {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         call_id: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         name: Option<String>,
-        #[ts(as = "FunctionCallOutputBody")]
-        #[schemars(with = "FunctionCallOutputBody")]
+        #[cfg_attr(feature = "ts", ts(as = "FunctionCallOutputBody"))]
+        #[cfg_attr(feature = "schemars", schemars(with = "FunctionCallOutputBody"))]
         output: FunctionCallOutputPayload,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     ToolSearchOutput {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         call_id: Option<String>,
         status: String,
         execution: String,
-        #[ts(type = "unknown[]")]
+        #[cfg_attr(feature = "ts", ts(type = "unknown[]"))]
         tools: Vec<serde_json::Value>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     // Emitted by the Responses API when the agent triggers a web search.
@@ -177,17 +267,29 @@ pub enum ResponseItem {
     //   "action": {"type":"search","query":"weather: San Francisco, CA"}
     // }
     WebSearchCall {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         status: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         action: Option<WebSearchAction>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     // Emitted by the Responses API when the agent triggers image generation.
@@ -200,42 +302,66 @@ pub enum ResponseItem {
     //   "result":"..."
     // }
     ImageGenerationCall {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         status: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         revised_prompt: Option<String>,
         result: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
-    #[serde(alias = "compaction_summary")]
+    #[cfg_attr(feature = "serde", serde(alias = "compaction_summary"))]
     Compaction {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
         encrypted_content: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
     // Compaction triggers are request controls, not durable response items.
     CompactionTrigger {},
     ContextCompaction {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         id: Option<ResponseItemId>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         encrypted_content: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         internal_chat_message_metadata_passthrough: Option<InternalChatMessageMetadataPassthrough>,
     },
-    #[serde(other)]
+    #[cfg_attr(feature = "serde", serde(other))]
     Other,
 }
 
@@ -462,8 +588,11 @@ impl ResponseItem {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(untagged)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(untagged))]
 pub enum FunctionCallOutputBody {
     Text(String),
     ContentItems(Vec<FunctionCallOutputContentItem>),
@@ -525,8 +654,11 @@ pub fn function_call_output_content_items_to_text(
 
 /// Responses API compatible content items that can be returned by a tool call.
 /// This is a subset of ContentItem with the types we support as function call outputs.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum FunctionCallOutputContentItem {
     // Do not rename, these are serialized and used directly in the responses API.
     InputText {
@@ -535,8 +667,11 @@ pub enum FunctionCallOutputContentItem {
     // Do not rename, these are serialized and used directly in the responses API.
     InputImage {
         image_url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         detail: Option<ImageDetail>,
     },
     EncryptedContent {
@@ -544,8 +679,11 @@ pub enum FunctionCallOutputContentItem {
     },
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 pub enum ImageDetail {
     Auto,
     Low,
@@ -555,16 +693,22 @@ pub enum ImageDetail {
 
 pub const DEFAULT_IMAGE_DETAIL: ImageDetail = ImageDetail::High;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum ContentItem {
     InputText {
         text: String,
     },
     InputImage {
         image_url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         detail: Option<ImageDetail>,
     },
     OutputText {
@@ -572,8 +716,11 @@ pub enum ContentItem {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 /// Classifies an assistant message as interim commentary or final answer text.
 ///
 /// Providers do not emit this consistently, so callers must treat `None` as
@@ -592,10 +739,16 @@ pub enum MessagePhase {
 ///
 /// Responses API strongly types this payload. Do not modify it without first getting API
 /// approval and making the corresponding Responses API change.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq, JsonSchema, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct InternalChatMessageMetadataPassthrough {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[ts(optional)]
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub turn_id: Option<String>,
 }
 
@@ -613,13 +766,17 @@ impl InternalChatMessageMetadataPassthrough {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum AgentMessageInputContent {
     InputText { text: String },
     EncryptedContent { encrypted_content: String },
 }
 
+#[cfg(feature = "serde")]
 fn should_serialize_reasoning_content(content: &Option<Vec<ReasoningItemContent>>) -> bool {
     match content {
         Some(content) => !content
@@ -629,34 +786,49 @@ fn should_serialize_reasoning_content(content: &Option<Vec<ReasoningItemContent>
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum ReasoningItemReasoningSummary {
     SummaryText { text: String },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum ReasoningItemContent {
     ReasoningText { text: String },
     Text { text: String },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum LocalShellStatus {
     Completed,
     InProgress,
     Incomplete,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
 pub enum LocalShellAction {
     Exec(LocalShellExecAction),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct LocalShellExecAction {
     pub command: Vec<String>,
     pub timeout_ms: Option<u64>,
@@ -669,7 +841,9 @@ pub struct LocalShellExecAction {
 ///
 /// `body` serializes directly as the wire value for `function_call_output.output`.
 /// `success` remains internal metadata for downstream handling.
-#[derive(Debug, Default, Clone, PartialEq, JsonSchema, TS)]
+#[derive(Debug, Default, Clone, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct FunctionCallOutputPayload {
     pub body: FunctionCallOutputBody,
     pub success: Option<bool>,
@@ -722,6 +896,7 @@ impl FunctionCallOutputPayload {
 // `function_call_output.output` is encoded as either:
 //   - an array of structured content items
 //   - a plain string
+#[cfg(feature = "serde")]
 impl Serialize for FunctionCallOutputPayload {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -734,6 +909,7 @@ impl Serialize for FunctionCallOutputPayload {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for FunctionCallOutputPayload {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -747,32 +923,50 @@ impl<'de> Deserialize<'de> for FunctionCallOutputPayload {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
-#[serde(tag = "type", rename_all = "snake_case")]
-#[schemars(rename = "ResponsesApiWebSearchAction")]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(tag = "type", rename_all = "snake_case"))]
+#[cfg_attr(feature = "schemars", schemars(rename = "ResponsesApiWebSearchAction"))]
 pub enum WebSearchAction {
     Search {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         query: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         queries: Option<Vec<String>>,
     },
     OpenPage {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         url: Option<String>,
     },
     FindInPage {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         url: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[ts(optional)]
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Option::is_none")
+        )]
+        #[cfg_attr(feature = "ts", ts(optional))]
         pattern: Option<String>,
     },
 
-    #[serde(other)]
+    #[cfg_attr(feature = "serde", serde(other))]
     Other,
 }

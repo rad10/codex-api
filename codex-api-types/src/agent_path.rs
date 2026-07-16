@@ -1,14 +1,18 @@
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use std::{fmt, ops::Deref, str::FromStr};
+use std::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 
-#[derive(
-    Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, JsonSchema, TS,
-)]
-#[serde(try_from = "String", into = "String")]
-#[schemars(with = "String")]
-#[ts(type = "string")]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(try_from = "String", into = "String"))]
+#[cfg_attr(feature = "schemars", schemars(with = "String"))]
+#[cfg_attr(feature = "ts", ts(type = "string"))]
 pub struct AgentPath(String);
 
 impl AgentPath {

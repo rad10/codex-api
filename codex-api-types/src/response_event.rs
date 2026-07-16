@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
 use ts_rs::TS;
 
 use crate::response_item::ResponseItem;
@@ -56,43 +59,56 @@ pub enum ResponseEvent {
     ModelsEtag(String),
 }
 
-#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
-#[ts(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
 pub enum ModelVerification {
     TrustedAccessForCyber,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SafetyBuffering {
     pub use_cases: Vec<String>,
     pub reasons: Vec<String>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub show_buffering_ui: bool,
-    #[serde(rename = "retry_model")]
+    #[cfg_attr(feature = "serde", serde(rename = "retry_model"))]
     pub faster_model: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct TurnModerationMetadataEvent {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq, JsonSchema, TS)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct TokenUsage {
-    #[ts(type = "number")]
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub input_tokens: i64,
-    #[ts(type = "number")]
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub cached_input_tokens: i64,
-    #[ts(type = "number")]
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub output_tokens: i64,
-    #[ts(type = "number")]
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub reasoning_output_tokens: i64,
-    #[ts(type = "number")]
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub total_tokens: i64,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct RateLimitSnapshot {
     pub limit_id: Option<String>,
     pub limit_name: Option<String>,
@@ -106,9 +122,12 @@ pub struct RateLimitSnapshot {
     pub rate_limit_reached_type: Option<RateLimitReachedType>,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq, JsonSchema, TS, Default)]
-#[serde(rename_all = "lowercase")]
-#[ts(rename_all = "lowercase")]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "lowercase"))]
 pub enum PlanType {
     #[default]
     Free,
@@ -117,22 +136,25 @@ pub enum PlanType {
     Pro,
     ProLite,
     Team,
-    #[serde(rename = "self_serve_business_usage_based")]
-    #[ts(rename = "self_serve_business_usage_based")]
+    #[cfg_attr(feature = "serde", serde(rename = "self_serve_business_usage_based"))]
+    #[cfg_attr(feature = "ts", ts(rename = "self_serve_business_usage_based"))]
     SelfServeBusinessUsageBased,
     Business,
-    #[serde(rename = "enterprise_cbp_usage_based")]
-    #[ts(rename = "enterprise_cbp_usage_based")]
+    #[cfg_attr(feature = "serde", serde(rename = "enterprise_cbp_usage_based"))]
+    #[cfg_attr(feature = "ts", ts(rename = "enterprise_cbp_usage_based"))]
     EnterpriseCbpUsageBased,
     Enterprise,
     Edu,
-    #[serde(other)]
+    #[cfg_attr(feature = "serde", serde(other))]
     Unknown,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, JsonSchema, TS)]
-#[serde(rename_all = "snake_case")]
-#[ts(rename_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
 pub enum RateLimitReachedType {
     RateLimitReached,
     WorkspaceOwnerCreditsDepleted,
@@ -156,26 +178,35 @@ impl FromStr for RateLimitReachedType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct RateLimitWindow {
     /// Percentage (0-100) of the window that has been consumed.
     pub used_percent: f64,
     /// Rolling window duration, in minutes.
-    #[ts(type = "number | null")]
+    #[cfg_attr(feature = "ts", ts(type = "number | null"))]
     pub window_minutes: Option<i64>,
     /// Unix timestamp (seconds since epoch) when the window resets.
-    #[ts(type = "number | null")]
+    #[cfg_attr(feature = "ts", ts(type = "number | null"))]
     pub resets_at: Option<i64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct CreditsSnapshot {
     pub has_credits: bool,
     pub unlimited: bool,
     pub balance: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, JsonSchema, TS)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "ts", derive(TS))]
 pub struct SpendControlLimitSnapshot {
     pub limit: String,
     pub used: String,
