@@ -1,5 +1,6 @@
-use std::str::FromStr;
+use std::{str::FromStr, time::Duration};
 
+use chrono::{DateTime, Utc};
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 #[cfg(feature = "serde")]
@@ -191,6 +192,18 @@ pub struct RateLimitWindow {
     /// Unix timestamp (seconds since epoch) when the window resets.
     #[cfg_attr(feature = "ts", ts(type = "number | null"))]
     pub resets_at: Option<i64>,
+}
+
+impl RateLimitWindow {
+    /// Rolling window duration, in minutes.
+    pub fn window_minutes(&self) -> Option<Duration> {
+        self.window_minutes.clone().map(i64::unsigned_abs).map(Duration::from_mins)
+    }
+
+    /// Unix timestamp (seconds since epoch) when the window resets.
+    pub fn resets_at(&self) -> Option<DateTime<Utc>> {
+        self.resets_at.clone().and_then(DateTime::from_timestamp_secs)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

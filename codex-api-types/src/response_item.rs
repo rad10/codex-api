@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
@@ -835,6 +835,12 @@ pub struct LocalShellExecAction {
     pub working_directory: Option<String>,
     pub env: Option<HashMap<String, String>>,
     pub user: Option<String>,
+}
+
+impl LocalShellExecAction {
+    pub fn timeout(&self) -> Option<Duration> {
+        self.timeout_ms.clone().map(Duration::from_millis)
+    }
 }
 
 /// The payload we send back to OpenAI when reporting a tool call result.
