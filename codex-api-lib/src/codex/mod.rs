@@ -139,3 +139,13 @@ impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
         <C as CodexAsync>::codex_responses(&self).await
     }
 }
+
+#[derive(Default)]
+pub struct ResponsesOptions {
+    pub session_id: Option<String>,
+    pub thread_id: Option<String>,
+    pub session_source: Option<SessionSource>,
+    pub extra_headers: HeaderMap,
+    pub compression: Compression,
+    pub turn_state: Option<Arc<OnceLock<String>>>,
+}

@@ -14,6 +14,9 @@ use serde::Serializer;
 use serde::de::Error;
 use ts_rs::TS;
 
+use crate::agent_path::AgentPath;
+use crate::thread_id::ThreadId;
+
 const PERSONALITY_PLACEHOLDER: &str = "{{ personality }}";
 pub const SPEED_TIER_FAST: &str = "fast";
 
@@ -78,8 +81,9 @@ impl<'de> Deserialize<'de> for ReasoningEffort {
     where
         D: Deserializer<'de>,
     {
-        let effort = String::deserialize(deserializer)?;
-        effort.parse().map_err(D::Error::custom)
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(D::Error::custom)
     }
 }
 
@@ -663,6 +667,239 @@ pub enum MultiAgentVersion {
     V1,
     V2,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS, Default)]
+#[serde(rename_all = "lowercase")]
+#[ts(rename_all = "lowercase")]
+pub enum SessionSource {
+    Cli,
+    #[default]
+    VSCode,
+    Exec,
+    Mcp,
+    Custom(String),
+    Internal(InternalSessionSource),
+    SubAgent(SubAgentSource),
+    #[serde(other)]
+    Unknown,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(rename_all = "snake_case")]
+pub enum InternalSessionSource {
+    MemoryConsolidation,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, TS)]
+#[serde(rename_all = "snake_case")]
+#[ts(rename_all = "snake_case")]
+pub enum SubAgentSource {
+    Review,
+    Compact,
+    ThreadSpawn {
+        parent_thread_id: ThreadId,
+        depth: i32,
+        #[serde(default)]
+        agent_path: Option<AgentPath>,
+        #[serde(default)]
+        agent_nickname: Option<String>,
+        #[serde(default, alias = "agent_type")]
+        agent_role: Option<String>,
+    },
+    MemoryConsolidation,
+    Other(String),
+}
+
+impl fmt::Display for SessionSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SessionSource::Cli => f.write_str("cli"),
+            SessionSource::VSCode => f.write_str("vscode"),
+            SessionSource::Exec => f.write_str("exec"),
+            SessionSource::Mcp => f.write_str("mcp"),
+            SessionSource::Custom(source) => f.write_str(source),
+            SessionSource::Internal(source) => write!(f, "internal_{source}"),
+            SessionSource::SubAgent(sub_source) => write!(f, "subagent_{sub_source}"),
+            SessionSource::Unknown => f.write_str("unknown"),
+        }
+    }
+}
+
+impl SessionSource {
+    pub fn from_startup_arg(value: &str) -> Result<Self, &'static str> {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            return Err("session source must not be empty");
+        }
+
+        let normalized = trimmed.to_ascii_lowercase();
+        Ok(match normalized.as_str() {
+            "cli" => SessionSource::Cli,
+            "vscode" => SessionSource::VSCode,
+            "exec" => SessionSource::Exec,
+            "mcp" | "appserver" | "app-server" | "app_server" => SessionSource::Mcp,
+            "unknown" => SessionSource::Unknown,
+            _ => SessionSource::Custom(normalized),
+        })
+    }
+
+    pub fn is_internal(&self) -> bool {
+        matches!(self, SessionSource::Internal(_))
+    }
+
+    pub fn is_non_root_agent(&self) -> bool {
+        matches!(
+            self,
+            SessionSource::Internal(_) | SessionSource::SubAgent(_)
+        )
+    }
+
+    pub fn get_nickname(&self) -> Option<String> {
+        match self {
+            SessionSource::SubAgent(SubAgentSource::ThreadSpawn { agent_nickname, .. }) => {
+                agent_nickname.clone()
+            }
+            _ => None,
+        }
+    }
+
+    pub fn get_agent_role(&self) -> Option<String> {
+        match self {
+            SessionSource::SubAgent(SubAgentSource::ThreadSpawn { agent_role, .. }) => {
+                agent_role.clone()
+            }
+            _ => None,
+        }
+    }
+
+    pub fn get_agent_path(&self) -> Option<AgentPath> {
+        match self {
+            SessionSource::SubAgent(SubAgentSource::ThreadSpawn { agent_path, .. }) => {
+                agent_path.clone()
+            }
+            _ => None,
+        }
+    }
+
+    pub fn restriction_product(&self) -> Option<Product> {
+        match self {
+            SessionSource::Custom(source) => Product::from_session_source_name(source),
+            SessionSource::Cli
+            | SessionSource::VSCode
+            | SessionSource::Exec
+            | SessionSource::Mcp
+            | SessionSource::Unknown => Some(Product::Codex),
+            SessionSource::Internal(_) | SessionSource::SubAgent(_) => None,
+        }
+    }
+
+    pub fn matches_product_restriction(&self, products: &[Product]) -> bool {
+        products.is_empty()
+            || self
+                .restriction_product()
+                .is_some_and(|product| product.matches_product_restriction(products))
+    }
+
+    pub fn parent_thread_id(&self) -> Option<ThreadId> {
+        match self {
+            SessionSource::SubAgent(subagent_source) => subagent_source.parent_thread_id(),
+            SessionSource::Cli
+            | SessionSource::VSCode
+            | SessionSource::Exec
+            | SessionSource::Mcp
+            | SessionSource::Custom(_)
+            | SessionSource::Internal(_)
+            | SessionSource::Unknown => None,
+        }
+    }
+}
+
+impl fmt::Display for SubAgentSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SubAgentSource::Review => f.write_str("review"),
+            SubAgentSource::Compact => f.write_str("compact"),
+            SubAgentSource::MemoryConsolidation => f.write_str("memory_consolidation"),
+            SubAgentSource::ThreadSpawn {
+                parent_thread_id,
+                depth,
+                ..
+            } => {
+                write!(f, "thread_spawn_{parent_thread_id}_d{depth}")
+            }
+            SubAgentSource::Other(other) => f.write_str(other),
+        }
+    }
+}
+
+impl SubAgentSource {
+    pub fn kind(&self) -> &str {
+        match self {
+            SubAgentSource::Review => "review",
+            SubAgentSource::Compact => "compact",
+            SubAgentSource::ThreadSpawn { .. } => "thread_spawn",
+            SubAgentSource::MemoryConsolidation => "memory_consolidation",
+            SubAgentSource::Other(other) => other,
+        }
+    }
+
+    pub fn parent_thread_id(&self) -> Option<ThreadId> {
+        match self {
+            SubAgentSource::ThreadSpawn {
+                parent_thread_id, ..
+            } => Some(*parent_thread_id),
+            SubAgentSource::Review
+            | SubAgentSource::Compact
+            | SubAgentSource::MemoryConsolidation
+            | SubAgentSource::Other(_) => None,
+        }
+    }
+}
+
+impl fmt::Display for InternalSessionSource {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InternalSessionSource::MemoryConsolidation => f.write_str("memory_consolidation"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(rename_all = "lowercase")]
+pub enum Product {
+    #[serde(alias = "CHATGPT")]
+    Chatgpt,
+    #[serde(alias = "CODEX")]
+    Codex,
+    #[serde(alias = "ATLAS")]
+    Atlas,
+}
+impl Product {
+    pub fn to_app_platform(self) -> &'static str {
+        match self {
+            Self::Chatgpt => "chat",
+            Self::Codex => "codex",
+            Self::Atlas => "atlas",
+        }
+    }
+
+    pub fn from_session_source_name(value: &str) -> Option<Self> {
+        let normalized = value.trim().to_ascii_lowercase();
+        match normalized.as_str() {
+            "chatgpt" => Some(Self::Chatgpt),
+            "codex" => Some(Self::Codex),
+            "atlas" => Some(Self::Atlas),
+            _ => None,
+        }
+    }
+
+    pub fn matches_product_restriction(&self, products: &[Product]) -> bool {
+        products.is_empty() || products.contains(self)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
