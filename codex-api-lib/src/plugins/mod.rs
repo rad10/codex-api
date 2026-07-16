@@ -2,7 +2,6 @@ use std::borrow::Borrow;
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
-use uuid::Uuid;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
