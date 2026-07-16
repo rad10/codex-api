@@ -12,7 +12,7 @@ pub mod directory;
 // Table of endpoint constants
 pub const MODULE_CONNECTORS: &str = "connectors";
 
-pub trait ConnectorsSub {
+pub trait ConnectorsSub: Sized {
     fn connectors<'a>(&'a self) -> Connectors<'a, Self> {
         Connectors { client: self }
     }

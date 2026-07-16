@@ -2,6 +2,8 @@ use std::borrow::Borrow;
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
+#[cfg(feature = "boxed")]
+use wasm_not_send_sync::WasmNotSync;
 
 #[cfg(feature = "async")]
 use crate::codex::analytics_events::AnalyticsEventsAsync;
@@ -18,7 +20,7 @@ pub const MODULE_CODEX: &str = "codex";
 pub const ENDPOINT_MODELS: &str = "models";
 pub const ENDPOINT_RESPONSES: &str = "responses";
 
-pub trait CodexSub {
+pub trait CodexSub: Sized {
     fn codex<'a>(&'a self) -> Codex<'a, Self> {
         Codex { client: self }
     }
@@ -54,18 +56,18 @@ pub trait CodexSync: ApiCommon + AnalyticsEventsSync {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "sync", not(feature = "async")))]
+#[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: CodexSync> Codex<'a, C> {
     fn models(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::codex_models(self.borrow())
     }
 
     fn responses(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::codex_responses(self.borrow())
     }
@@ -86,12 +88,12 @@ pub trait CodexAsync: ApiCommon + AnalyticsEventsAsync {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "async", not(feature = "sync")))]
+#[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: CodexAsync> Codex<'a, C> {
     /// Collects models from Codex's library
     async fn models(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::codex_models(self.borrow()).await
     }
@@ -99,7 +101,7 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
     /// Collects a response from ChatGPT's API
     async fn responses(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::codex_responses(self.borrow()).await
     }
@@ -121,7 +123,7 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
 
 #[cfg(feature = "boxed")]
 #[async_trait]
-impl<C: CodexAsync> CodexAsyncBoxed for C {
+impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String>,

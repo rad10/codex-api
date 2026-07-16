@@ -14,7 +14,7 @@ pub trait CodexApi {}
 impl<T> CodexApi for T {}
 
 // Creating a type for async functions
-trait FutureNotSend: Future + WasmNotSend {}
+pub trait FutureNotSend: Future + WasmNotSend {}
 impl<T: Future + WasmNotSend> FutureNotSend for T {}
 
 /// Functions and types that will be common amongst all API calls

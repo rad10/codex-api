@@ -3,6 +3,8 @@ use std::borrow::Borrow;
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
 use uuid::Uuid;
+#[cfg(feature = "boxed")]
+use wasm_not_send_sync::WasmNotSync;
 
 use crate::{ApiCommon, FutureNotSend};
 
@@ -10,7 +12,7 @@ use crate::{ApiCommon, FutureNotSend};
 pub const MODULE_PLUGINS: &str = "plugins";
 pub const ENDPOINT_FEATURED: &str = "featured";
 
-pub trait PluginsSub {
+pub trait PluginsSub: Sized {
     fn accounts<'a>(&'a self) -> Plugins<'a, Self> {
         Plugins { client: self }
     }
@@ -41,7 +43,7 @@ pub trait PluginsSync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "sync", not(feature = "async")))]
+#[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: PluginsSync> Plugins<'a, C> {
     /// Gets the settings for the given user's account
     fn featured(&self) -> Result<C::Response, C::ApiError>
@@ -62,12 +64,12 @@ pub trait PluginsAsync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "async", not(feature = "sync")))]
+#[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PluginsAsync> Plugins<'a, C> {
     /// Gets the settings for the given user's account
     async fn featured(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::plugins_featured(self.borrow()).await
     }
@@ -84,7 +86,7 @@ pub trait PluginsAsyncBoxed: ApiCommon {
 
 #[cfg(feature = "boxed")]
 #[async_trait]
-impl<C: PluginsAsync> PluginsAsyncBoxed for C {
+impl<C: PluginsAsync + WasmNotSync> PluginsAsyncBoxed for C {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String>,

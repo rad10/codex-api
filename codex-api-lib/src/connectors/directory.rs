@@ -2,7 +2,11 @@ use std::borrow::Borrow;
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
+#[cfg(feature = "boxed")]
+use wasm_not_send_sync::WasmNotSync;
 
+#[cfg(feature = "async")]
+use crate::FutureNotSend;
 use crate::{ApiCommon, connectors::Connectors};
 
 pub const MODULE_DIRECTORY: &str = "directory";
@@ -43,17 +47,17 @@ pub trait DirectorySync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-// #[cfg(all(feature = "sync", not(feature = "async")))]
+#[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: DirectorySync> Directory<'a, C> {
     fn list(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String> {
+        C::Response: TryInto<String> {
         C::connectors_directory_list(self.borrow())
     }
 
     fn list_workspace(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String> {
+        C::Response: TryInto<String> {
         C::connectors_directory_list_workspace(self.borrow())
     }
 }
@@ -69,17 +73,17 @@ pub trait DirectoryAsync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-// #[cfg(all(feature = "async", not(feature = "sync")))]
+#[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: DirectoryAsync> Directory<'a, C> {
     async fn list(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String> {
+        C::Response: TryInto<String> {
         C::connectors_directory_list(self.borrow()).await
     }
 
     async fn list_workspace(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String> {
+        C::Response: TryInto<String> {
         C::connectors_directory_list_workspace(self.borrow()).await
     }
 }
@@ -98,7 +102,7 @@ pub trait DirectoryAsyncBoxed: ApiCommon {
 
 #[cfg(feature = "boxed")]
 #[async_trait]
-impl<C: DirectoryAsync> DirectoryAsyncBoxed for C {
+impl<C: DirectoryAsync + WasmNotSync> DirectoryAsyncBoxed for C {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String>

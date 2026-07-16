@@ -3,6 +3,8 @@ use std::borrow::Borrow;
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
 use uuid::Uuid;
+#[cfg(feature = "boxed")]
+use wasm_not_send_sync::WasmNotSync;
 
 use crate::{ApiCommon, FutureNotSend};
 
@@ -10,7 +12,7 @@ use crate::{ApiCommon, FutureNotSend};
 pub const MODULE_ACCOUNTS: &str = "accounts";
 pub const ENDPOINT_SETTINGS: &str = "settings";
 
-pub trait AccountsSub {
+pub trait AccountsSub: Sized {
     fn accounts<'a>(&'a self) -> Account<'a, Self> {
         Account { client: self }
     }
@@ -41,12 +43,12 @@ pub trait AccountsSync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "sync", not(feature = "async")))]
+#[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: AccountsSync> Account<'a, C> {
     /// Gets the settings for the given user's account
     fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::account_settings(self.borrow(), user_id)
     }
@@ -63,12 +65,12 @@ pub trait AccountsAsync: ApiCommon {
         Self::Response: TryInto<String>;
 }
 
-//#[cfg(all(feature = "async", not(feature = "sync")))]
+#[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: AccountsAsync> Account<'a, C> {
     /// Gets the settings for the given user's account
     async fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::account_settings(self.borrow(), user_id).await
     }
@@ -85,7 +87,7 @@ pub trait AccountsAsyncBoxed: ApiCommon {
 
 #[cfg(feature = "boxed")]
 #[async_trait]
-impl<C: AccountsAsync> AccountsAsyncBoxed for C {
+impl<C: AccountsAsync + WasmNotSync> AccountsAsyncBoxed for C {
     async fn account_settings(&self, user_id: Uuid) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String>,
