@@ -70,18 +70,18 @@ impl AgentPath {
 }
 
 impl TryFrom<String> for AgentPath {
-    type Error = String;
+    type Error = <Self as FromStr>::Err;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        Self::from_string(value)
+        value.parse()
     }
 }
 
 impl TryFrom<&str> for AgentPath {
-    type Error = String;
+    type Error = <Self as FromStr>::Err;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::from_string(value.to_string())
+        value.parse()
     }
 }
 
@@ -95,12 +95,19 @@ impl FromStr for AgentPath {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::try_from(s)
+        validate_absolute_path(s)?;
+        Ok(Self(s.to_owned()))
     }
 }
 
 impl AsRef<str> for AgentPath {
     fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl Borrow<str> for AgentPath {
+    fn borrow(&self) -> &str {
         self.as_str()
     }
 }
@@ -115,7 +122,7 @@ impl Deref for AgentPath {
 
 impl fmt::Display for AgentPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.as_str())
+        self.0.fmt(f)
     }
 }
 

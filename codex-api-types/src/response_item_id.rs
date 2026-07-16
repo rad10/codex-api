@@ -51,6 +51,12 @@ impl AsRef<str> for ResponseItemId {
     }
 }
 
+impl Borrow<str> for ResponseItemId {
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
 impl fmt::Display for ResponseItemId {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(self.as_str())
