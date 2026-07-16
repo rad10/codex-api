@@ -8,10 +8,87 @@ pub mod ps;
 pub mod wham;
 
 /// A master trait containing all modules that are available
-pub trait CodexApi {}
+pub trait CodexApi:
+    accounts::AccountsSub
+    + codex::CodexSub
+    + connectors::ConnectorsSub
+    + plugins::PluginsSub
+    + ps::PsSub
+    + wham::WhamSub
+{
+}
+
+pub trait CodexApiSync:
+    accounts::AccountsSync
+    + codex::CodexSync
+    + connectors::ConnectorsSync
+    + plugins::PluginsSync
+    + ps::PsSync
+    + wham::WhamSync
+{
+}
+
+pub trait CodexApiAsync:
+    accounts::AccountsAsync
+    + codex::CodexAsync
+    + connectors::ConnectorsAsync
+    + plugins::PluginsAsync
+    + ps::PsAsync
+    + wham::WhamAsync
+{
+}
+
+pub trait CodexApiBoxed:
+    accounts::AccountsAsyncBoxed
+    + codex::CodexAsyncBoxed
+    + connectors::ConnectorsAsyncBoxed
+    + plugins::PluginsAsyncBoxed
+    + ps::PsAsyncBoxed
+    + wham::WhamAsyncBoxed
+{
+}
 
 // blanket implement of api trait on all models that implement all traits
-impl<T> CodexApi for T {}
+impl<
+    T: accounts::AccountsSub
+        + codex::CodexSub
+        + connectors::ConnectorsSub
+        + plugins::PluginsSub
+        + ps::PsSub
+        + wham::WhamSub,
+> CodexApi for T
+{
+}
+impl<
+    T: accounts::AccountsSync
+        + codex::CodexSync
+        + connectors::ConnectorsSync
+        + plugins::PluginsSync
+        + ps::PsSync
+        + wham::WhamSync,
+> CodexApiSync for T
+{
+}
+impl<
+    T: accounts::AccountsAsync
+        + codex::CodexAsync
+        + connectors::ConnectorsAsync
+        + plugins::PluginsAsync
+        + ps::PsAsync
+        + wham::WhamAsync,
+> CodexApiAsync for T
+{
+}
+impl<
+    T: accounts::AccountsAsyncBoxed
+        + codex::CodexAsyncBoxed
+        + connectors::ConnectorsAsyncBoxed
+        + plugins::PluginsAsyncBoxed
+        + ps::PsAsyncBoxed
+        + wham::WhamAsyncBoxed,
+> CodexApiBoxed for T
+{
+}
 
 // Creating a type for async functions
 pub trait FutureNotSend: Future + WasmNotSend {}
