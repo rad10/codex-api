@@ -11,6 +11,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as _};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::agent_path::AgentPath;
 use crate::response_item::ResponseItem;
@@ -118,6 +120,7 @@ impl FromStr for ReasoningEffort {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum InputModality {
     /// Plain text turns and tool payloads.
     Text,
@@ -129,6 +132,7 @@ pub enum InputModality {
 ///
 /// Legacy payloads predate modality metadata, so we conservatively assume both text and images are
 /// accepted unless a preset explicitly narrows support.
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub fn default_input_modalities() -> Vec<InputModality> {
     vec![InputModality::Text, InputModality::Image]
 }
@@ -149,11 +153,17 @@ pub struct ReasoningEffortPreset {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelUpgrade {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub id: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub migration_config_key: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub model_link: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub upgrade_copy: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub migration_markdown: Option<String>,
 }
 
@@ -161,7 +171,9 @@ pub struct ModelUpgrade {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelAvailabilityNux {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub message: String,
 }
 
@@ -169,9 +181,13 @@ pub struct ModelAvailabilityNux {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelServiceTier {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub id: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub name: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub description: String,
 }
 
@@ -237,6 +253,7 @@ pub struct ModelPreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ModelVisibility {
     List,
     Hide,
@@ -249,6 +266,7 @@ pub enum ModelVisibility {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ConfigShellToolType {
     Default,
     Local,
@@ -262,6 +280,7 @@ pub enum ConfigShellToolType {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ApplyPatchToolType {
     Freeform,
 }
@@ -271,6 +290,7 @@ pub enum ApplyPatchToolType {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum WebSearchToolType {
     #[default]
     Text,
@@ -283,6 +303,7 @@ pub enum WebSearchToolType {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum TruncationMode {
     Bytes,
     Tokens,
@@ -293,6 +314,7 @@ pub enum TruncationMode {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ToolMode {
     Direct,
     CodeMode,
@@ -303,6 +325,7 @@ pub enum ToolMode {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct TruncationPolicyConfig {
     pub mode: TruncationMode,
     pub limit: i64,
@@ -329,6 +352,7 @@ impl TruncationPolicyConfig {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ClientVersion(pub i32, pub i32, pub i32);
 
 #[cfg(feature = "serde")]
@@ -512,11 +536,17 @@ impl ModelInfo {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelMessages {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub instructions_template: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub instructions_variables: Option<ModelInstructionsVariables>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub approvals: Option<ApprovalMessages>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub auto_review: Option<AutoReviewMessages>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub permissions: Option<PermissionMessages>,
 }
 
@@ -524,8 +554,11 @@ pub struct ModelMessages {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ApprovalMessages {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub on_request: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub on_request_auto_review: Option<String>,
 }
 
@@ -533,8 +566,11 @@ pub struct ApprovalMessages {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct AutoReviewMessages {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub policy: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub policy_template: Option<String>,
 }
 
@@ -542,12 +578,17 @@ pub struct AutoReviewMessages {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct PermissionMessages {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub danger_full_access: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub workspace_write: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub read_only: Option<String>,
 }
 
+#[cfg_attr(feature = "js", wasm_bindgen)]
 impl ModelMessages {
     fn has_personality_placeholder(&self) -> bool {
         self.instructions_template
@@ -575,12 +616,17 @@ impl ModelMessages {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelInstructionsVariables {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub personality_default: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub personality_friendly: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub personality_pragmatic: Option<String>,
 }
 
+#[cfg_attr(feature = "js", wasm_bindgen)]
 impl ModelInstructionsVariables {
     pub fn is_complete(&self) -> bool {
         self.personality_default.is_some()
@@ -605,8 +651,11 @@ impl ModelInstructionsVariables {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct ModelInfoUpgrade {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub model: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub migration_markdown: String,
 }
 
@@ -724,6 +773,7 @@ impl ModelPreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ReasoningSummary {
     #[default]
     Auto,
@@ -740,6 +790,7 @@ pub enum ReasoningSummary {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum Verbosity {
     Low,
     #[default]
@@ -752,6 +803,7 @@ pub enum Verbosity {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum Personality {
     None,
     Friendly,
@@ -763,6 +815,7 @@ pub enum Personality {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ServiceTier {
     Fast,
     Flex,
@@ -775,7 +828,9 @@ impl ServiceTier {
             Self::Flex => "flex",
         }
     }
-
+}
+#[cfg_attr(feature = "js", wasm_bindgen)]
+impl ServiceTier {
     pub fn from_request_value(value: &str) -> Option<Self> {
         match value {
             "fast" | "priority" => Some(Self::Fast),
@@ -791,6 +846,7 @@ impl ServiceTier {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum MultiAgentVersion {
     Disabled,
     V1,
@@ -816,12 +872,13 @@ pub enum SessionSource {
     Unknown,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum InternalSessionSource {
     MemoryConsolidation,
 }
@@ -1009,6 +1066,7 @@ impl fmt::Display for InternalSessionSource {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum Product {
     #[cfg_attr(feature = "serde", serde(alias = "CHATGPT"))]
     Chatgpt,
@@ -1017,6 +1075,7 @@ pub enum Product {
     #[cfg_attr(feature = "serde", serde(alias = "ATLAS"))]
     Atlas,
 }
+
 impl Product {
     pub fn to_app_platform(self) -> &'static str {
         match self {
@@ -1026,6 +1085,13 @@ impl Product {
         }
     }
 
+    pub fn matches_product_restriction(&self, products: &[Self]) -> bool {
+        products.is_empty() || products.contains(self)
+    }
+}
+
+#[cfg_attr(feature = "js", wasm_bindgen)]
+impl Product {
     pub fn from_session_source_name(value: &str) -> Option<Self> {
         let normalized = value.trim().to_ascii_lowercase();
         match normalized.as_str() {
@@ -1034,10 +1100,6 @@ impl Product {
             "atlas" => Some(Self::Atlas),
             _ => None,
         }
-    }
-
-    pub fn matches_product_restriction(&self, products: &[Product]) -> bool {
-        products.is_empty() || products.contains(self)
     }
 }
 
@@ -1079,24 +1141,27 @@ pub struct Reasoning {
     pub context: Option<ReasoningContext>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ReasoningContext {
     Auto,
     CurrentTurn,
     AllTurns,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct StreamOptions {
     pub reasoning_summary_delivery: ReasoningSummaryDelivery,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ReasoningSummaryDelivery {
     SequentialCutoff,
 }
@@ -1115,6 +1180,7 @@ pub struct TextControls {
 #[derive(Debug, Default, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum OpenAiVerbosity {
     Low,
     #[default]
@@ -1138,6 +1204,7 @@ pub struct TextFormat {
 #[derive(Debug, Default, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum TextFormatType {
     #[default]
     JsonSchema,

@@ -9,10 +9,13 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 use uuid::Uuid;
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "ts", ts(type = "string"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 /// Identifier for a Codex thread.
 ///
 /// Codex-generated thread IDs are UUIDv7, and some use cases rely on that.

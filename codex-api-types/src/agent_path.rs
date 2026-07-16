@@ -2,6 +2,8 @@
 use schemars::JsonSchema;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 use std::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -13,6 +15,7 @@ use ts_rs::TS;
 #[cfg_attr(feature = "serde", serde(try_from = "String", into = "String"))]
 #[cfg_attr(feature = "schemars", schemars(with = "String"))]
 #[cfg_attr(feature = "ts", ts(type = "string"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct AgentPath(String);
 
 impl AgentPath {
@@ -20,6 +23,24 @@ impl AgentPath {
     pub const MORPHEUS: &str = "/morpheus";
     const ROOT_SEGMENT: &str = "root";
 
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+
+    pub fn name(&self) -> &str {
+        if self.is_root() {
+            return Self::ROOT_SEGMENT;
+        }
+        self.as_str()
+            .rsplit('/')
+            .next()
+            .filter(|segment| !segment.is_empty())
+            .unwrap_or(Self::ROOT_SEGMENT)
+    }
+}
+
+#[cfg_attr(feature = "js", wasm_bindgen)]
+impl AgentPath {
     pub fn root() -> Self {
         Self(Self::ROOT.to_string())
     }
@@ -33,23 +54,8 @@ impl AgentPath {
         Ok(Self(path))
     }
 
-    pub fn as_str(&self) -> &str {
-        self.0.as_str()
-    }
-
     pub fn is_root(&self) -> bool {
         self.as_str() == Self::ROOT
-    }
-
-    pub fn name(&self) -> &str {
-        if self.is_root() {
-            return Self::ROOT_SEGMENT;
-        }
-        self.as_str()
-            .rsplit('/')
-            .next()
-            .filter(|segment| !segment.is_empty())
-            .unwrap_or(Self::ROOT_SEGMENT)
     }
 
     pub fn join(&self, agent_name: &str) -> Result<Self, String> {
@@ -106,13 +112,13 @@ impl FromStr for AgentPath {
 
 impl AsRef<str> for AgentPath {
     fn as_ref(&self) -> &str {
-        self.as_str()
+        self.0.as_str()
     }
 }
 
 impl Borrow<str> for AgentPath {
     fn borrow(&self) -> &str {
-        self.as_str()
+        self.0.as_str()
     }
 }
 
@@ -120,7 +126,7 @@ impl Deref for AgentPath {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        self.as_str()
+        self.0.as_str()
     }
 }
 

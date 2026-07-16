@@ -1,13 +1,14 @@
 use std::{collections::HashMap, time::Duration};
 
+use crate::response_item_id::ResponseItemId;
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
-
-use crate::response_item_id::ResponseItemId;
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -684,6 +685,7 @@ pub enum FunctionCallOutputContentItem {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ImageDetail {
     Auto,
     Low,
@@ -721,6 +723,7 @@ pub enum ContentItem {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 /// Classifies an assistant message as interim commentary or final answer text.
 ///
 /// Providers do not emit this consistently, so callers must treat `None` as
@@ -743,15 +746,18 @@ pub enum MessagePhase {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct InternalChatMessageMetadataPassthrough {
     #[cfg_attr(
         feature = "serde",
         serde(default, skip_serializing_if = "Option::is_none")
     )]
     #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub turn_id: Option<String>,
 }
 
+#[cfg_attr(feature = "js", wasm_bindgen)]
 impl InternalChatMessageMetadataPassthrough {
     pub(crate) fn set_turn_id_if_missing(metadata: &mut Option<Self>, turn_id: &str) {
         if turn_id.is_empty()
@@ -810,6 +816,7 @@ pub enum ReasoningItemContent {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum LocalShellStatus {
     Completed,
     InProgress,

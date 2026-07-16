@@ -7,6 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::response_item::ResponseItem;
 
@@ -66,18 +68,23 @@ pub enum ResponseEvent {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum ModelVerification {
     TrustedAccessForCyber,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct SafetyBuffering {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub use_cases: Vec<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub reasons: Vec<String>,
     #[cfg_attr(feature = "serde", serde(skip))]
     pub show_buffering_ui: bool,
     #[cfg_attr(feature = "serde", serde(rename = "retry_model"))]
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub faster_model: Option<String>,
 }
 
@@ -93,6 +100,7 @@ pub struct TurnModerationMetadataEvent {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct TokenUsage {
     #[cfg_attr(feature = "ts", ts(type = "number"))]
     pub input_tokens: i64,
@@ -110,12 +118,19 @@ pub struct TokenUsage {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct RateLimitSnapshot {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub limit_id: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub limit_name: Option<String>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub primary: Option<RateLimitWindow>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub secondary: Option<RateLimitWindow>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub credits: Option<CreditsSnapshot>,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub individual_limit: Option<SpendControlLimitSnapshot>,
     /// Backend-reported spend-control state. `None` is unavailable, not a sparse-update recovery.
     pub spend_control_reached: Option<bool>,
@@ -129,6 +144,7 @@ pub struct RateLimitSnapshot {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "lowercase"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum PlanType {
     #[default]
     Free,
@@ -156,6 +172,7 @@ pub enum PlanType {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 #[cfg_attr(feature = "ts", ts(rename_all = "snake_case"))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub enum RateLimitReachedType {
     RateLimitReached,
     WorkspaceOwnerCreditsDepleted,
@@ -183,6 +200,7 @@ impl FromStr for RateLimitReachedType {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct RateLimitWindow {
     /// Percentage (0-100) of the window that has been consumed.
     pub used_percent: f64,
@@ -210,9 +228,11 @@ impl RateLimitWindow {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct CreditsSnapshot {
     pub has_credits: bool,
     pub unlimited: bool,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub balance: Option<String>,
 }
 
@@ -220,8 +240,11 @@ pub struct CreditsSnapshot {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "js", wasm_bindgen)]
 pub struct SpendControlLimitSnapshot {
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub limit: String,
+    #[cfg_attr(feature = "js", wasm_bindgen(getter_with_clone))]
     pub used: String,
     pub remaining_percent: i32,
     pub resets_at: i64,
@@ -230,6 +253,7 @@ pub struct SpendControlLimitSnapshot {
 // Includes prompts, tools and space to call compact.
 const BASELINE_TOKENS: i64 = 12000;
 
+#[cfg_attr(feature = "js", wasm_bindgen)]
 impl TokenUsage {
     pub fn is_zero(&self) -> bool {
         self.total_tokens == 0
