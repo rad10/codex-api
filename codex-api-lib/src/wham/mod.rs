@@ -73,7 +73,9 @@ impl<'a, C: WhamSync> Wham<'a, C> {
 
 #[cfg(feature = "async")]
 pub trait WhamAsync: ApiCommon + ProfilesAsync {
-    fn wham_rate_limit_reset_credits(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    fn wham_rate_limit_reset_credits(
+        &self,
+    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
         Self::Response: TryInto<String>;
 
@@ -123,7 +125,7 @@ impl<C: WhamAsync + WasmNotSync> WhamAsyncBoxed for C {
 
     async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>
+        Self::Response: TryInto<String>,
     {
         <C as WhamAsync>::wham_usage(&self).await
     }

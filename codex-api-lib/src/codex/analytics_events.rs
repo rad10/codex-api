@@ -46,14 +46,17 @@ pub trait AnalyticsEventsSync: ApiCommon {
 impl<'a, C: AnalyticsEventsSync> AnalyticsEvents<'a, C> {
     fn events(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String> {
+        C::Response: TryInto<String>,
+    {
         C::codex_analytics_events_events(self.borrow())
     }
 }
 
 #[cfg(feature = "async")]
 pub trait AnalyticsEventsAsync: ApiCommon {
-    fn codex_analytics_events_events(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    fn codex_analytics_events_events(
+        &self,
+    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
         Self::Response: TryInto<String>;
 }
@@ -63,7 +66,8 @@ impl<'a, C: AnalyticsEventsAsync> AnalyticsEvents<'a, C> {
     /// Collects models from Codex's library
     async fn events(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String> {
+        C::Response: TryInto<String>,
+    {
         C::codex_analytics_events_events(self.borrow()).await
     }
 }
@@ -81,7 +85,7 @@ pub trait AnalyticsEventsAsyncBoxed: ApiCommon {
 impl<C: AnalyticsEventsAsync + WasmNotSync> AnalyticsEventsAsyncBoxed for C {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>
+        Self::Response: TryInto<String>,
     {
         <C as AnalyticsEventsAsync>::codex_analytics_events_events(&self).await
     }
