@@ -5,11 +5,9 @@ edition = "2024"
 
 [dependencies]
 async-trait = { version = "0.1.89", default-features = false, optional = true }
-chrono = { version = "0.4.45", default-features = false, features = ["serde"] }
 codex-api-types = { version = "0.1.0", path = "../codex-api-types", default-features = false }
 http = { version = "1.4.2", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
-url = { version = "2.5.8", default-features = false, features = ["serde"] }
 uuid = { version = "1.23.5", default-features = false, features = ["serde", "v4"] }
 wasm-not-send-sync = "0.1.0"
 
