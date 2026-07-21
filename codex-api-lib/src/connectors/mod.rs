@@ -1,11 +1,12 @@
 use std::borrow::Borrow;
 
+use crate::ApiCommon;
 #[cfg(feature = "async")]
 use crate::connectors::directory::DirectoryAsync;
 #[cfg(feature = "boxed")]
 use crate::connectors::directory::DirectoryAsyncBoxed;
 #[cfg(feature = "sync")]
-use crate::{ApiCommon, connectors::directory::DirectorySync};
+use crate::connectors::directory::DirectorySync;
 
 pub mod directory;
 

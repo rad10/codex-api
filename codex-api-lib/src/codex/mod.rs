@@ -5,9 +5,7 @@ use std::{
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
-#[cfg(feature = "sync")]
-use codex_api_types::codex::ResponsesApiRequest;
-use codex_api_types::codex::{ModelsResponse, SessionSource};
+use codex_api_types::codex::{ModelsResponse, SessionSource, ResponsesApiRequest};
 use http::HeaderMap;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
