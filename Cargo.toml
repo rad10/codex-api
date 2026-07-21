@@ -1,4 +1,4 @@
 [workspace]
-members = ["codex-api-lib", "codex-api-types"]
+members = ["codex-api-lib", "codex-api-reqwests", "codex-api-types"]
 resolver = "3"
 default-members = ["codex-api-lib", "codex-api-types"]

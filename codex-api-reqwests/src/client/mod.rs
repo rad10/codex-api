@@ -1,0 +1,356 @@
+use codex_api_lib::{ApiCommon, STANDARD_ENDPOINT};
+use http::HeaderMap;
+use reqwest::Client;
+#[cfg(feature = "middleware")]
+use reqwest::IntoUrl;
+#[cfg(feature = "middleware")]
+use reqwest_middleware::ClientWithMiddleware;
+use url::Url;
+
+#[cfg(feature = "middleware")]
+use crate::client::traits::NoAccountId;
+use crate::{
+    client::traits::{CodexAccountId, CodexAuthorization},
+    response::ApiResponse,
+};
+
+pub mod traits;
+
+/// The Codex Client
+#[derive(Debug, Clone)]
+pub struct CodexClient<
+    Auth: CodexAuthorization,
+    Acc: CodexAccountId = NoAccountId,
+    U: IntoUrl = Url,
+> {
+    /// The reqwest client
+    pub(crate) client: Client,
+    /// The endpoint that the API sends out to
+    pub(crate) endpoint: U,
+    /// The object containing authorization data
+    pub(crate) authorization: Auth,
+    /// The optional account id to attach to headers
+    pub(crate) account_id: Option<Acc>,
+    /// Extra headers to send with every request
+    pub(crate) extra_headers: HeaderMap,
+}
+
+/// The Codex Client with a Middleware Wrapper
+#[cfg(feature = "middleware")]
+#[derive(Debug, Clone)]
+pub struct CodexMiddleware<
+    Auth: CodexAuthorization,
+    Acc: CodexAccountId = NoAccountId,
+    U: IntoUrl = Url,
+> {
+    /// The reqwest client
+    pub(crate) client: ClientWithMiddleware,
+    /// The endpoint that the API sends out to
+    pub(crate) endpoint: U,
+    /// The object containing authorization data
+    pub(crate) authorization: Auth,
+    /// The optional account id to attach to headers
+    pub(crate) account_id: Option<Acc>,
+    /// Extra headers to send with every request
+    pub(crate) extra_headers: HeaderMap,
+}
+
+impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
+    pub fn new(client: Client, authorization: Auth) -> Self {
+        Self {
+            client,
+            endpoint: STANDARD_ENDPOINT,
+            authorization,
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Auth, Acc, End> {
+    pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexClient<Auth, A, End> {
+        let Self {
+            client,
+            endpoint,
+            authorization,
+            extra_headers,
+            ..
+        } = self;
+        CodexClient {
+            client,
+            endpoint,
+            authorization,
+            account_id: Some(account),
+            extra_headers,
+        }
+    }
+
+    pub fn with_endpoint<U: IntoUrl>(self, endpoint: U) -> CodexClient<Auth, Acc, U> {
+        let Self {
+            client,
+            authorization,
+            account_id,
+            extra_headers,
+            ..
+        } = self;
+        CodexClient {
+            client,
+            endpoint,
+            authorization,
+            account_id,
+            extra_headers,
+        }
+    }
+
+    pub fn with_headers(self, headers: HeaderMap) -> Self {
+        Self {
+            extra_headers: headers,
+            ..self
+        }
+    }
+
+    /// Creates headers for use in API calls
+    pub(crate) fn get_headers(&self) -> HeaderMap {
+        let mut base_headers = self.extra_headers.clone();
+
+        self.authorization
+            .add_authorization_header(&mut base_headers);
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut base_headers);
+        }
+        base_headers
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization> CodexMiddleware<Auth, NoAccountId, &'static str> {
+    pub fn with_middleware(client: ClientWithMiddleware, authorization: Auth) -> Self {
+        Self {
+            client,
+            endpoint: STANDARD_ENDPOINT,
+            authorization,
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexMiddleware<Auth, Acc, End> {
+    pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexMiddleware<Auth, A, End> {
+        let Self {
+            client,
+            endpoint,
+            authorization,
+            extra_headers,
+            ..
+        } = self;
+        CodexMiddleware {
+            client,
+            endpoint,
+            authorization,
+            account_id: Some(account),
+            extra_headers,
+        }
+    }
+
+    pub fn with_endpoint<U: IntoUrl>(self, endpoint: U) -> CodexMiddleware<Auth, Acc, U> {
+        let Self {
+            client,
+            authorization,
+            account_id,
+            extra_headers,
+            ..
+        } = self;
+        CodexMiddleware {
+            client,
+            endpoint,
+            authorization,
+            account_id,
+            extra_headers,
+        }
+    }
+
+    pub fn with_headers(self, headers: HeaderMap) -> Self {
+        Self {
+            extra_headers: headers,
+            ..self
+        }
+    }
+
+    /// Creates headers for use in API calls
+    pub(crate) fn get_headers(&self) -> HeaderMap {
+        let mut base_headers = self.extra_headers.clone();
+
+        self.authorization
+            .add_authorization_header(&mut base_headers);
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut base_headers);
+        }
+        base_headers
+    }
+}
+
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
+    for CodexClient<Auth, Acc, U>
+{
+    type Response = ApiResponse;
+
+    type ApiError = reqwest::Error;
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
+    for CodexMiddleware<Auth, Acc, U>
+{
+    type Response = ApiResponse;
+
+    type ApiError = reqwest_middleware::Error;
+}
+
+impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
+    for CodexClient<A, C, &'static str>
+{
+    fn default() -> Self {
+        Self {
+            client: Default::default(),
+            endpoint: STANDARD_ENDPOINT,
+            authorization: Default::default(),
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
+    for CodexMiddleware<A, C, &'static str>
+{
+    fn default() -> Self {
+        Self {
+            client: Default::default(),
+            endpoint: STANDARD_ENDPOINT,
+            authorization: Default::default(),
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+/// Contains the client used for sync calls
+#[cfg(feature = "sync")]
+pub mod blocking {
+    use reqwest::blocking::Client;
+
+    use super::{
+        ApiCommon, ApiResponse, CodexAccountId, CodexAuthorization, HeaderMap, IntoUrl,
+        NoAccountId, STANDARD_ENDPOINT, Url,
+    };
+
+    /// The Codex Client
+    #[derive(Debug, Clone)]
+    pub struct CodexClient<
+        Auth: CodexAuthorization,
+        Acc: CodexAccountId = NoAccountId,
+        U: IntoUrl = Url,
+    > {
+        /// The reqwest client
+        pub(crate) client: Client,
+        /// The endpoint that the API sends out to
+        pub(crate) endpoint: U,
+        /// The object containing authorization data
+        pub(crate) authorization: Auth,
+        /// The optional account id to attach to headers
+        pub(crate) account_id: Option<Acc>,
+        /// Extra headers to send with every request
+        pub(crate) extra_headers: HeaderMap,
+    }
+
+    impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
+        pub fn new(client: Client, authorization: Auth) -> Self {
+            Self {
+                client,
+                endpoint: STANDARD_ENDPOINT,
+                authorization,
+                account_id: None,
+                extra_headers: HeaderMap::new(),
+            }
+        }
+    }
+
+    impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Auth, Acc, End> {
+        pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexClient<Auth, A, End> {
+            let Self {
+                client,
+                endpoint,
+                authorization,
+                extra_headers,
+                ..
+            } = self;
+            CodexClient {
+                client,
+                endpoint,
+                authorization,
+                account_id: Some(account),
+                extra_headers,
+            }
+        }
+
+        pub fn with_endpoint<U: IntoUrl>(self, endpoint: U) -> CodexClient<Auth, Acc, U> {
+            let Self {
+                client,
+                authorization,
+                account_id,
+                extra_headers,
+                ..
+            } = self;
+            CodexClient {
+                client,
+                endpoint,
+                authorization,
+                account_id,
+                extra_headers,
+            }
+        }
+
+        pub fn with_headers(self, headers: HeaderMap) -> Self {
+            Self {
+                extra_headers: headers,
+                ..self
+            }
+        }
+
+        /// Creates headers for use in API calls
+        pub(crate) fn get_headers(&self) -> HeaderMap {
+            let mut base_headers = self.extra_headers.clone();
+
+            self.authorization
+                .add_authorization_header(&mut base_headers);
+            if let Some(account_id) = self.account_id.as_ref() {
+                account_id.add_account_header(&mut base_headers);
+            }
+            base_headers
+        }
+    }
+
+    impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
+        for CodexClient<Auth, Acc, U>
+    {
+        type Response = ApiResponse;
+
+        type ApiError = reqwest::Error;
+    }
+
+    impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
+        for CodexClient<A, C, &'static str>
+    {
+        fn default() -> Self {
+            Self {
+                client: Default::default(),
+                endpoint: STANDARD_ENDPOINT,
+                authorization: Default::default(),
+                account_id: None,
+                extra_headers: HeaderMap::new(),
+            }
+        }
+    }
+}
