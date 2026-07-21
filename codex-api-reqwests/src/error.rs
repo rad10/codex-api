@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display};
 
+use http::StatusCode;
+
 
 /// Describes all Codex Errors that can occur on the API side
 #[derive(Debug)]
@@ -18,6 +20,15 @@ pub enum MiddlewareError {
     Endpoint(url::ParseError),
     /// Reqwest had an internal error
     Middleware(reqwest_middleware::Error)
+}
+
+/// Provides an error that is used for parsing model values from responses
+#[derive(Debug)]
+pub enum ParsingError {
+    /// The response gave an unexpected status code
+    InvalidStatus(StatusCode),
+    /// The body gave invalid data and did not deserialize properly
+    FailedDeserialization(serde_json::error::Error),
 }
 
 impl From<url::ParseError> for ApiError {
@@ -87,6 +98,36 @@ impl Error for MiddlewareError {
         match self {
             MiddlewareError::Endpoint(parse_error) => Some(parse_error),
             MiddlewareError::Middleware(error) => Some(error),
+        }
+    }
+}
+
+impl From<StatusCode> for ParsingError {
+    fn from(value: StatusCode) -> Self {
+        Self::InvalidStatus(value)
+    }
+}
+
+impl From<serde_json::Error> for ParsingError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::FailedDeserialization(value)
+    }
+}
+
+impl Display for ParsingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParsingError::InvalidStatus(status_code) => write!(f, "received unexpected status code {status_code}"),
+            ParsingError::FailedDeserialization(error) => write!(f, "failed to deserialize object: {error}"),
+        }
+    }
+}
+
+impl Error for ParsingError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            ParsingError::InvalidStatus(_status_code) => None,
+            ParsingError::FailedDeserialization(error) => Some(error),
         }
     }
 }

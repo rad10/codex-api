@@ -3,16 +3,17 @@ use codex_api_lib::codex::CodexAsync;
 #[cfg(feature = "sync")]
 use codex_api_lib::codex::CodexSync;
 use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, MODULE_CODEX};
+use http::StatusCode;
 use reqwest::IntoUrl;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::{
+use crate::{client::{
     CodexClient,
     traits::{CodexAccountId, CodexAuthorization},
-};
+}, error::ParsingError};
 #[cfg(feature = "async")]
 use crate::response::ApiResponse;
 
@@ -165,5 +166,13 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         options: codex_api_lib::codex::ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError> {
         todo!()
+    }
+}
+
+impl TryFrom<ApiResponse> for codex_api_types::codex::ModelsResponse {
+    type Error = ParsingError;
+
+    fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
+        value.deserialize_if_ok(StatusCode::OK)
     }
 }
