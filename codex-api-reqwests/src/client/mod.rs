@@ -9,8 +9,11 @@ use url::Url;
 
 #[cfg(feature = "middleware")]
 use crate::client::traits::NoAccountId;
+#[cfg(feature = "middleware")]
+use crate::error::MiddlewareError;
 use crate::{
     client::traits::{CodexAccountId, CodexAuthorization},
+    error::ApiError,
     response::ApiResponse,
 };
 
@@ -196,7 +199,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
 {
     type Response = ApiResponse;
 
-    type ApiError = reqwest::Error;
+    type ApiError = ApiError;
 }
 
 #[cfg(feature = "middleware")]
@@ -205,7 +208,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
 {
     type Response = ApiResponse;
 
-    type ApiError = reqwest_middleware::Error;
+    type ApiError = MiddlewareError;
 }
 
 impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
@@ -242,7 +245,7 @@ pub mod blocking {
     use reqwest::blocking::Client;
 
     use super::{
-        ApiCommon, ApiResponse, CodexAccountId, CodexAuthorization, HeaderMap, IntoUrl,
+        ApiCommon, ApiError, ApiResponse, CodexAccountId, CodexAuthorization, HeaderMap, IntoUrl,
         NoAccountId, STANDARD_ENDPOINT, Url,
     };
 
@@ -337,7 +340,7 @@ pub mod blocking {
     {
         type Response = ApiResponse;
 
-        type ApiError = reqwest::Error;
+        type ApiError = ApiError;
     }
 
     impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
