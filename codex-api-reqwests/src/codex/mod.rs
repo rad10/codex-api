@@ -109,7 +109,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         // Calling API request
         let response = self.client.execute(request_data).await?;
 
-        ApiResponse::from_response(response).await
+        ApiResponse::from_response(response).await.map_err(Into::into)
     }
 
     async fn codex_responses(
