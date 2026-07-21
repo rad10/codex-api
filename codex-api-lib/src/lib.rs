@@ -7,6 +7,8 @@ pub mod plugins;
 pub mod ps;
 pub mod wham;
 
+pub const STANDARD_ENDPOINT: &'static str = "https://chatgpt.com/backend-ui/";
+
 /// A master trait containing all modules that are available
 pub trait CodexApi:
     accounts::AccountsSub
