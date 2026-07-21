@@ -9,9 +9,9 @@ codex-api-types = { version = "0.1.0", path = "../codex-api-types", default-feat
 http = { version = "1.4.2", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 uuid = { version = "1.23.5", default-features = false, features = ["serde", "v4"] }
-wasm-not-send-sync = "0.1.0"
+wasm-not-send-sync = { version = "0.1.0", optional = true }
 
 [features]
 sync = []
-async = []
+async = ["dep:wasm-not-send-sync"]
 boxed = ["async", "dep:async-trait"]

@@ -1,3 +1,4 @@
+#[cfg(feature = "async")]
 use wasm_not_send_sync::WasmNotSend;
 
 pub mod accounts;
@@ -20,6 +21,7 @@ pub trait CodexApi:
 {
 }
 
+#[cfg(feature = "sync")]
 pub trait CodexApiSync:
     accounts::AccountsSync
     + codex::CodexSync
@@ -30,6 +32,7 @@ pub trait CodexApiSync:
 {
 }
 
+#[cfg(feature = "async")]
 pub trait CodexApiAsync:
     accounts::AccountsAsync
     + codex::CodexAsync
@@ -40,6 +43,7 @@ pub trait CodexApiAsync:
 {
 }
 
+#[cfg(feature = "boxed")]
 pub trait CodexApiBoxed:
     accounts::AccountsAsyncBoxed
     + codex::CodexAsyncBoxed
@@ -61,6 +65,7 @@ impl<
 > CodexApi for T
 {
 }
+#[cfg(feature = "sync")]
 impl<
     T: accounts::AccountsSync
         + codex::CodexSync
@@ -71,6 +76,7 @@ impl<
 > CodexApiSync for T
 {
 }
+#[cfg(feature = "async")]
 impl<
     T: accounts::AccountsAsync
         + codex::CodexAsync
@@ -81,6 +87,7 @@ impl<
 > CodexApiAsync for T
 {
 }
+#[cfg(feature = "boxed")]
 impl<
     T: accounts::AccountsAsyncBoxed
         + codex::CodexAsyncBoxed
@@ -93,7 +100,9 @@ impl<
 }
 
 // Creating a type for async functions
+#[cfg(feature = "async")]
 pub trait FutureNotSend: Future + WasmNotSend {}
+#[cfg(feature = "async")]
 impl<T: Future + WasmNotSend> FutureNotSend for T {}
 
 /// Functions and types that will be common amongst all API calls

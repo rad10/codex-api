@@ -5,13 +5,13 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
-#[cfg(feature = "async")]
-use crate::ps::plugins::PluginsAsync;
+use crate::ApiCommon;
 #[cfg(feature = "boxed")]
 use crate::ps::plugins::PluginsAsyncBoxed;
 #[cfg(feature = "sync")]
 use crate::ps::plugins::PluginsSync;
-use crate::{ApiCommon, FutureNotSend};
+#[cfg(feature = "async")]
+use crate::{FutureNotSend, ps::plugins::PluginsAsync};
 
 pub mod plugins;
 

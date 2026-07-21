@@ -5,13 +5,13 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
-#[cfg(feature = "async")]
-use crate::wham::profiles::ProfilesAsync;
+use crate::ApiCommon;
 #[cfg(feature = "boxed")]
 use crate::wham::profiles::ProfilesAsyncBoxed;
 #[cfg(feature = "sync")]
 use crate::wham::profiles::ProfilesSync;
-use crate::{ApiCommon, FutureNotSend};
+#[cfg(feature = "async")]
+use crate::{FutureNotSend, wham::profiles::ProfilesAsync};
 
 pub mod profiles;
 

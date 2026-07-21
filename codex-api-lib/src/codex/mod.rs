@@ -12,13 +12,13 @@ use http::HeaderMap;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
-#[cfg(feature = "async")]
-use crate::codex::analytics_events::AnalyticsEventsAsync;
+use crate::ApiCommon;
 #[cfg(feature = "boxed")]
 use crate::codex::analytics_events::AnalyticsEventsAsyncBoxed;
 #[cfg(feature = "sync")]
 use crate::codex::analytics_events::AnalyticsEventsSync;
-use crate::{ApiCommon, FutureNotSend};
+#[cfg(feature = "async")]
+use crate::{FutureNotSend, codex::analytics_events::AnalyticsEventsAsync};
 
 pub mod analytics_events;
 

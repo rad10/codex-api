@@ -6,7 +6,9 @@ use uuid::Uuid;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
-use crate::{ApiCommon, FutureNotSend};
+use crate::ApiCommon;
+#[cfg(feature = "async")]
+use crate::FutureNotSend;
 
 // Table of endpoint constants
 pub const MODULE_ACCOUNTS: &str = "accounts";
