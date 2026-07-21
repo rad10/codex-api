@@ -100,6 +100,7 @@ impl<
 {
 }
 
+#[cfg(feature = "async")]
 pub use async_from::{AsyncFrom, AsyncInto, AsyncTryFrom, AsyncTryInto};
 
 // Creating a type for async functions

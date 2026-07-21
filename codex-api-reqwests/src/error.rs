@@ -28,7 +28,7 @@ pub enum ParsingError {
     /// The response gave an unexpected status code
     InvalidStatus(StatusCode),
     /// The body gave invalid data and did not deserialize properly
-    FailedDeserialization(serde_json::error::Error),
+    FailedDeserialization(reqwest::Error),
 }
 
 impl From<url::ParseError> for ApiError {
@@ -108,8 +108,8 @@ impl From<StatusCode> for ParsingError {
     }
 }
 
-impl From<serde_json::Error> for ParsingError {
-    fn from(value: serde_json::Error) -> Self {
+impl From<reqwest::Error> for ParsingError {
+    fn from(value: reqwest::Error) -> Self {
         Self::FailedDeserialization(value)
     }
 }

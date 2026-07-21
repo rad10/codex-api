@@ -218,9 +218,11 @@ impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
 pub mod blocking {
     use reqwest::blocking::Client;
 
+    use crate::response::BlockingApiResponse;
+
     use super::{
-        ApiCommon, ApiError, ApiResponse, CodexAccountId, CodexAuthorization, HeaderMap, IntoUrl,
-        NoAccountId, STANDARD_ENDPOINT, Url,
+        ApiCommon, ApiError, CodexAccountId, CodexAuthorization, HeaderMap, IntoUrl, NoAccountId,
+        STANDARD_ENDPOINT, Url,
     };
 
     /// The Codex Client
@@ -300,7 +302,7 @@ pub mod blocking {
     impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
         for CodexClient<Auth, Acc, U>
     {
-        type Response = ApiResponse;
+        type Response = BlockingApiResponse;
 
         type ApiError = ApiError;
     }
