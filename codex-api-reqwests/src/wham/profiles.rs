@@ -13,7 +13,7 @@ use crate::client::blocking;
 use crate::client::traits::{CodexAuthorization, CodexAccountId};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ProfilesAsync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ProfilesAsync
     for CodexClient<Auth, Acc, U>
 {
     async fn wham_profiles_me(
@@ -26,7 +26,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ProfilesAsync
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ProfilesAsync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ProfilesAsync
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn wham_profiles_me(

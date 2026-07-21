@@ -28,7 +28,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AccountsAsync for CodexMiddleware<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AccountsAsync for CodexMiddleware<Auth, Acc, U> {
     async fn account_settings(
         &self,
         user_id: Uuid,

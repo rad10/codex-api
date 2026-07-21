@@ -11,7 +11,7 @@ use crate::client::blocking;
 use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsAsync for CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AnalyticsEventsAsync for CodexClient<Auth, Acc, U> {
     async fn codex_analytics_events_events(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
@@ -22,7 +22,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsA
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsAsync for CodexMiddleware<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AnalyticsEventsAsync for CodexMiddleware<Auth, Acc, U> {
     async fn codex_analytics_events_events(
         &self,
     ) -> Result<Self::Response, Self::ApiError>

@@ -22,7 +22,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> WhamSub for Code
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> WhamSub for blocking::CodexClient<Auth, Acc, U> {}
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> WhamAsync for CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> WhamAsync for CodexClient<Auth, Acc, U> {
     async fn wham_rate_limit_reset_credits(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
@@ -39,7 +39,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> WhamAsync for Co
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> WhamAsync for CodexMiddleware<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> WhamAsync for CodexMiddleware<Auth, Acc, U> {
     async fn wham_rate_limit_reset_credits(
         &self,
     ) -> Result<Self::Response, Self::ApiError>

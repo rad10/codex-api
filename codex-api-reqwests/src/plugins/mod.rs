@@ -21,7 +21,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub for C
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub for blocking::CodexClient<Auth, Acc, U> {}
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync for CodexClient<Auth, Acc, U> {
     async fn plugins_featured(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
@@ -32,7 +32,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for CodexMiddleware<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync for CodexMiddleware<Auth, Acc, U> {
     async fn plugins_featured(
         &self,
     ) -> Result<Self::Response, Self::ApiError>

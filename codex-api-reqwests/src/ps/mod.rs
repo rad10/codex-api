@@ -23,8 +23,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for CodexM
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for blocking::CodexClient<Auth, Acc, U> {}
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsAsync for CodexClient<Auth, Acc, U> {
-    fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexClient<Auth, Acc, U> {
+    async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()
@@ -32,8 +32,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsAsync for Code
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsAsync for CodexMiddleware<Auth, Acc, U> {
-    fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexMiddleware<Auth, Acc, U> {
+    async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()

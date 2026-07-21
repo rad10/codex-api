@@ -13,8 +13,8 @@ use crate::client::blocking;
 use crate::client::traits::{CodexAuthorization, CodexAccountId};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for CodexClient<Auth, Acc, U> {
-    fn ps_plugins_installed(
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync for CodexClient<Auth, Acc, U> {
+    async fn ps_plugins_installed(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
@@ -22,7 +22,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
         todo!()
     }
 
-    fn ps_plugins_list(
+    async fn ps_plugins_list(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
@@ -30,7 +30,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
         todo!()
     }
 
-    fn ps_plugins_suggested(
+    async fn ps_plugins_suggested(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
@@ -40,8 +40,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for CodexMiddleware<Auth, Acc, U> {
-    fn ps_plugins_installed(
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync for CodexMiddleware<Auth, Acc, U> {
+    async fn ps_plugins_installed(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
@@ -49,7 +49,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
         todo!()
     }
 
-    fn ps_plugins_list(
+    async fn ps_plugins_list(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
@@ -57,7 +57,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsAsync for
         todo!()
     }
 
-    fn ps_plugins_suggested(
+    async fn ps_plugins_suggested(
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where

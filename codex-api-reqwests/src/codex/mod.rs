@@ -79,7 +79,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexAsync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync> CodexAsync
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
@@ -122,7 +122,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexAsy
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexSync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync> CodexSync
     for blocking::CodexClient<Auth, Acc, U>
 {
     fn codex_models(&self) -> Result<Self::Response, Self::ApiError>

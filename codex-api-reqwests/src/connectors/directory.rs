@@ -13,18 +13,18 @@ use crate::client::blocking;
 use crate::client::traits::{CodexAuthorization, CodexAccountId};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> DirectoryAsync for CodexClient<Auth, Acc, U> {
-    fn connectors_directory_list(
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> DirectoryAsync for CodexClient<Auth, Acc, U> {
+    async fn connectors_directory_list(
         &self,
-    ) -> impl codex_api_lib::FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    ) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()
     }
 
-    fn connectors_directory_list_workspace(
+    async fn connectors_directory_list_workspace(
         &self,
-    ) -> impl codex_api_lib::FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    ) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()
@@ -32,18 +32,18 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> DirectoryAsync f
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> DirectoryAsync for CodexMiddleware<Auth, Acc, U> {
-    fn connectors_directory_list(
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> DirectoryAsync for CodexMiddleware<Auth, Acc, U> {
+    async fn connectors_directory_list(
         &self,
-    ) -> impl codex_api_lib::FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    ) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()
     }
 
-    fn connectors_directory_list_workspace(
+    async fn connectors_directory_list_workspace(
         &self,
-    ) -> impl codex_api_lib::FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    ) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: TryInto<String> {
         todo!()
