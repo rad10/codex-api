@@ -97,7 +97,8 @@ impl<'a, C: DirectoryAsync> Directory<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait DirectoryAsyncBoxed: ApiCommon {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -109,7 +110,8 @@ pub trait DirectoryAsyncBoxed: ApiCommon {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: DirectoryAsync + WasmNotSync> DirectoryAsyncBoxed for C {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
     where

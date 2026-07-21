@@ -102,7 +102,8 @@ impl<'a, C: WhamAsync> Wham<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait WhamAsyncBoxed: ApiCommon + ProfilesAsyncBoxed {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -114,7 +115,8 @@ pub trait WhamAsyncBoxed: ApiCommon + ProfilesAsyncBoxed {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: WhamAsync + WasmNotSync> WhamAsyncBoxed for C {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
     where

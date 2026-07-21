@@ -122,7 +122,8 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
     /// Collects models from Codex's library
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
@@ -138,7 +139,8 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where

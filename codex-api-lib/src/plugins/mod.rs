@@ -77,7 +77,8 @@ impl<'a, C: PluginsAsync> Plugins<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait PluginsAsyncBoxed: ApiCommon {
     /// Gets the settings for the given user's account
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
@@ -86,7 +87,8 @@ pub trait PluginsAsyncBoxed: ApiCommon {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: PluginsAsync + WasmNotSync> PluginsAsyncBoxed for C {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where

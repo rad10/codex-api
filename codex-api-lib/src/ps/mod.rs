@@ -77,7 +77,8 @@ impl<'a, C: PsAsync> Ps<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait PsAsyncBoxed: ApiCommon + PluginsAsyncBoxed {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -85,7 +86,8 @@ pub trait PsAsyncBoxed: ApiCommon + PluginsAsyncBoxed {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: PsAsync + WasmNotSync> PsAsyncBoxed for C {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where

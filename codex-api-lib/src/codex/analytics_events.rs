@@ -73,7 +73,8 @@ impl<'a, C: AnalyticsEventsAsync> AnalyticsEvents<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait AnalyticsEventsAsyncBoxed: ApiCommon {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -81,7 +82,8 @@ pub trait AnalyticsEventsAsyncBoxed: ApiCommon {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: AnalyticsEventsAsync + WasmNotSync> AnalyticsEventsAsyncBoxed for C {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where

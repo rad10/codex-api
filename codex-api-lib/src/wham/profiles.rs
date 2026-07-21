@@ -73,7 +73,8 @@ impl<'a, C: ProfilesAsync> Profiles<'a, C> {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 pub trait ProfilesAsyncBoxed: ApiCommon {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -81,7 +82,8 @@ pub trait ProfilesAsyncBoxed: ApiCommon {
 }
 
 #[cfg(feature = "boxed")]
-#[async_trait]
+#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl<C: ProfilesAsync + WasmNotSync> ProfilesAsyncBoxed for C {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
