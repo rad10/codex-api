@@ -67,18 +67,22 @@ pub trait CodexSync: ApiCommon + AnalyticsEventsSync {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: CodexSync> Codex<'a, C> {
-    fn models(&self) -> Result<C::Response, C::ApiError>
+    pub fn models(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<ModelsResponse>,
     {
         C::codex_models(self.borrow())
     }
 
-    fn responses(&self) -> Result<C::Response, C::ApiError>
+    pub fn responses(
+        &self,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
-        C::codex_responses(self.borrow())
+        C::codex_responses(self.borrow(), request, options)
     }
 }
 
@@ -100,7 +104,7 @@ pub trait CodexAsync: ApiCommon + AnalyticsEventsAsync {
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: CodexAsync> Codex<'a, C> {
     /// Collects models from Codex's library
-    async fn models(&self) -> Result<C::Response, C::ApiError>
+    pub async fn models(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<ModelsResponse>,
     {
@@ -108,7 +112,7 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
     }
 
     /// Collects a response from ChatGPT's API
-    async fn responses(
+    pub async fn responses(
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,

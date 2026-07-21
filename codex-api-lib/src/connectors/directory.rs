@@ -49,14 +49,14 @@ pub trait DirectorySync: ApiCommon {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: DirectorySync> Directory<'a, C> {
-    fn list(&self) -> Result<C::Response, C::ApiError>
+    pub fn list(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::connectors_directory_list(self.borrow())
     }
 
-    fn list_workspace(&self) -> Result<C::Response, C::ApiError>
+    pub fn list_workspace(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -81,14 +81,14 @@ pub trait DirectoryAsync: ApiCommon {
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: DirectoryAsync> Directory<'a, C> {
-    async fn list(&self) -> Result<C::Response, C::ApiError>
+    pub async fn list(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::connectors_directory_list(self.borrow()).await
     }
 
-    async fn list_workspace(&self) -> Result<C::Response, C::ApiError>
+    pub async fn list_workspace(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

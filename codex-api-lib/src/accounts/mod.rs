@@ -48,7 +48,7 @@ pub trait AccountsSync: ApiCommon {
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: AccountsSync> Account<'a, C> {
     /// Gets the settings for the given user's account
-    fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
+    pub fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -70,7 +70,7 @@ pub trait AccountsAsync: ApiCommon {
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: AccountsAsync> Account<'a, C> {
     /// Gets the settings for the given user's account
-    async fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
+    pub async fn settings(&self, user_id: Uuid) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

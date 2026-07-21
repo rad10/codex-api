@@ -47,9 +47,9 @@ pub trait PluginsSync: ApiCommon {
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: PluginsSync> Plugins<'a, C> {
     /// Gets the settings for the given user's account
-    fn featured(&self) -> Result<C::Response, C::ApiError>
+    pub fn featured(&self) -> Result<C::Response, C::ApiError>
     where
-        Self::Response: TryInto<String>,
+        C::Response: TryInto<String>,
     {
         C::plugins_featured(self.borrow())
     }
@@ -68,7 +68,7 @@ pub trait PluginsAsync: ApiCommon {
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PluginsAsync> Plugins<'a, C> {
     /// Gets the settings for the given user's account
-    async fn featured(&self) -> Result<C::Response, C::ApiError>
+    pub async fn featured(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

@@ -56,14 +56,14 @@ pub trait WhamSync: ApiCommon + ProfilesSync {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: WhamSync> Wham<'a, C> {
-    fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
+    pub fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::wham_rate_limit_reset_credits(self.borrow())
     }
 
-    fn usage(&self) -> Result<C::Response, C::ApiError>
+    pub fn usage(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -86,14 +86,14 @@ pub trait WhamAsync: ApiCommon + ProfilesAsync {
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: WhamAsync> Wham<'a, C> {
-    async fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
+    pub async fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::wham_rate_limit_reset_credits(self.borrow()).await
     }
 
-    async fn usage(&self) -> Result<C::Response, C::ApiError>
+    pub async fn usage(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

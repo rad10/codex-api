@@ -51,7 +51,7 @@ pub trait PsSync: ApiCommon + PluginsSync {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: PsSync> Ps<'a, C> {
-    fn mcp(&self) -> Result<C::Response, C::ApiError>
+    pub fn mcp(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -68,7 +68,7 @@ pub trait PsAsync: ApiCommon + PluginsAsync {
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PsAsync> Ps<'a, C> {
-    async fn mcp(&self) -> Result<C::Response, C::ApiError>
+    pub async fn mcp(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

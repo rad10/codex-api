@@ -44,7 +44,7 @@ pub trait AnalyticsEventsSync: ApiCommon {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: AnalyticsEventsSync> AnalyticsEvents<'a, C> {
-    fn events(&self) -> Result<C::Response, C::ApiError>
+    pub fn events(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -64,7 +64,7 @@ pub trait AnalyticsEventsAsync: ApiCommon {
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: AnalyticsEventsAsync> AnalyticsEvents<'a, C> {
     /// Collects models from Codex's library
-    async fn events(&self) -> Result<C::Response, C::ApiError>
+    pub async fn events(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

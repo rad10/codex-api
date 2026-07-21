@@ -54,21 +54,21 @@ pub trait PluginsSync: ApiCommon {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: PluginsSync> Plugins<'a, C> {
-    fn installed(&self) -> Result<C::Response, C::ApiError>
+    pub fn installed(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::ps_plugins_installed(self.borrow())
     }
 
-    fn list(&self) -> Result<C::Response, C::ApiError>
+    pub fn list(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::ps_plugins_list(self.borrow())
     }
 
-    fn suggested(&self) -> Result<C::Response, C::ApiError>
+    pub fn suggested(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -99,21 +99,21 @@ pub trait PluginsAsync: ApiCommon {
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PluginsAsync> Plugins<'a, C> {
-    async fn installed(&self) -> Result<C::Response, C::ApiError>
+    pub async fn installed(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::ps_plugins_installed(self.borrow()).await
     }
 
-    async fn list(&self) -> Result<C::Response, C::ApiError>
+    pub async fn list(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         C::ps_plugins_list(self.borrow()).await
     }
 
-    async fn suggested(&self) -> Result<C::Response, C::ApiError>
+    pub async fn suggested(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {

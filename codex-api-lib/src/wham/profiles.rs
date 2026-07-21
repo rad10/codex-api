@@ -44,7 +44,7 @@ pub trait ProfilesSync: ApiCommon {
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
 impl<'a, C: ProfilesSync> Profiles<'a, C> {
-    fn me(&self) -> Result<C::Response, C::ApiError>
+    pub fn me(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -64,7 +64,7 @@ pub trait ProfilesAsync: ApiCommon {
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: ProfilesAsync> Profiles<'a, C> {
     /// Collects models from Codex's library
-    async fn me(&self) -> Result<C::Response, C::ApiError>
+    pub async fn me(&self) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
