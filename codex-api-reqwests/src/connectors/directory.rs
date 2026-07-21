@@ -1,3 +1,5 @@
+#[cfg(all(feature = "async", feature = "middleware"))]
+use codex_api_lib::AsyncTryInto;
 #[cfg(feature = "async")]
 use codex_api_lib::connectors::directory::DirectoryAsync;
 #[cfg(feature = "sync")]
@@ -18,7 +20,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -26,7 +28,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -37,7 +39,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -45,7 +47,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

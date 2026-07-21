@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use wasm_not_send_sync::WasmNotSync;
 
 #[cfg(feature = "async")]
-use crate::FutureNotSend;
+use crate::{AsyncTryInto, FutureNotSend};
 use crate::{ApiCommon, wham::Wham};
 
 pub const MODULE_PROFILES: &str = "profiles";
@@ -58,7 +58,7 @@ pub trait ProfilesAsync: ApiCommon {
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -66,7 +66,7 @@ impl<'a, C: ProfilesAsync> Profiles<'a, C> {
     /// Collects models from Codex's library
     pub async fn me(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::wham_profiles_me(self.borrow()).await
     }
@@ -78,7 +78,7 @@ impl<'a, C: ProfilesAsync> Profiles<'a, C> {
 pub trait ProfilesAsyncBoxed: ApiCommon {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -87,7 +87,7 @@ pub trait ProfilesAsyncBoxed: ApiCommon {
 impl<C: ProfilesAsync + WasmNotSync> ProfilesAsyncBoxed for C {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as ProfilesAsync>::wham_profiles_me(&self).await
     }

@@ -2,6 +2,7 @@
 use wasm_not_send_sync::WasmNotSend;
 
 pub mod accounts;
+mod async_from;
 pub mod codex;
 pub mod connectors;
 pub mod plugins;
@@ -98,6 +99,8 @@ impl<
 > CodexApiBoxed for T
 {
 }
+
+pub use async_from::{AsyncFrom, AsyncInto, AsyncTryFrom, AsyncTryInto};
 
 // Creating a type for async functions
 #[cfg(feature = "async")]

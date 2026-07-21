@@ -11,7 +11,7 @@ use crate::ps::plugins::PluginsAsyncBoxed;
 #[cfg(feature = "sync")]
 use crate::ps::plugins::PluginsSync;
 #[cfg(feature = "async")]
-use crate::{FutureNotSend, ps::plugins::PluginsAsync};
+use crate::{AsyncTryInto, FutureNotSend, ps::plugins::PluginsAsync};
 
 pub mod plugins;
 
@@ -63,14 +63,14 @@ impl<'a, C: PsSync> Ps<'a, C> {
 pub trait PsAsync: ApiCommon + PluginsAsync {
     fn ps_mcp(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PsAsync> Ps<'a, C> {
     pub async fn mcp(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::ps_mcp(self.borrow()).await
     }
@@ -82,7 +82,7 @@ impl<'a, C: PsAsync> Ps<'a, C> {
 pub trait PsAsyncBoxed: ApiCommon + PluginsAsyncBoxed {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -91,7 +91,7 @@ pub trait PsAsyncBoxed: ApiCommon + PluginsAsyncBoxed {
 impl<C: PsAsync + WasmNotSync> PsAsyncBoxed for C {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as PsAsync>::ps_mcp(&self).await
     }

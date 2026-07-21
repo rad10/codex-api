@@ -1,8 +1,8 @@
-#[cfg(feature = "async")]
-use codex_api_lib::codex::CodexAsync;
 #[cfg(feature = "sync")]
 use codex_api_lib::codex::CodexSync;
-use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, MODULE_CODEX};
+use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX};
+#[cfg(feature = "async")]
+use codex_api_lib::{AsyncTryInto, codex::CodexAsync};
 use http::StatusCode;
 use reqwest::IntoUrl;
 
@@ -42,7 +42,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<codex_api_types::codex::ModelsResponse>,
+        Self::Response: AsyncTryInto<codex_api_types::codex::ModelsResponse>,
     {
         // Creating URL
         let api_url = self
@@ -87,7 +87,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<codex_api_types::codex::ModelsResponse>,
+        Self::Response: AsyncTryInto<codex_api_types::codex::ModelsResponse>,
     {
         // Creating URL
         let api_url = self
@@ -121,7 +121,10 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         &self,
         request: codex_api_types::codex::ResponsesApiRequest,
         options: codex_api_lib::codex::ResponsesOptions,
-    ) -> Result<Self::Response, Self::ApiError> {
+    ) -> Result<Self::Response, Self::ApiError>
+    where
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -157,14 +160,17 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         // Calling API request
         let response = self.client.execute(request_data)?;
 
-        response.try_into().map_err(Into::into)
+        TryInto::try_into(response).map_err(Into::into)
     }
 
     fn codex_responses(
         &self,
         request: codex_api_types::codex::ResponsesApiRequest,
         options: codex_api_lib::codex::ResponsesOptions,
-    ) -> Result<Self::Response, Self::ApiError> {
+    ) -> Result<Self::Response, Self::ApiError>
+    where
+        Self::Response: TryInto<String>,
+    {
         todo!()
     }
 }

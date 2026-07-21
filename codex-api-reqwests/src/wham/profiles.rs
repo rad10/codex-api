@@ -1,7 +1,7 @@
-#[cfg(feature = "async")]
-use codex_api_lib::wham::profiles::ProfilesAsync;
 #[cfg(feature = "sync")]
 use codex_api_lib::wham::profiles::ProfilesSync;
+#[cfg(feature = "async")]
+use codex_api_lib::{AsyncTryInto, wham::profiles::ProfilesAsync};
 use reqwest::IntoUrl;
 
 #[cfg(feature = "async")]
@@ -10,17 +10,16 @@ use crate::client::CodexClient;
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::traits::{CodexAuthorization, CodexAccountId};
+use crate::client::traits::{CodexAccountId, CodexAuthorization};
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ProfilesAsync
     for CodexClient<Auth, Acc, U>
 {
-    async fn wham_profiles_me(
-        &self,
-    ) -> Result<Self::Response, Self::ApiError>
+    async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -29,11 +28,10 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ProfilesAsync
     for CodexMiddleware<Auth, Acc, U>
 {
-    async fn wham_profiles_me(
-        &self,
-    ) -> Result<Self::Response, Self::ApiError>
+    async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -44,7 +42,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ProfilesSync
 {
     fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: TryInto<String>,
+    {
         todo!()
     }
 }

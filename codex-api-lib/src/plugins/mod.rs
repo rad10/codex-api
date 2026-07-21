@@ -7,7 +7,7 @@ use wasm_not_send_sync::WasmNotSync;
 
 use crate::ApiCommon;
 #[cfg(feature = "async")]
-use crate::FutureNotSend;
+use crate::{AsyncTryInto, FutureNotSend};
 
 // Table of endpoint constants
 pub const MODULE_PLUGINS: &str = "plugins";
@@ -62,7 +62,7 @@ pub trait PluginsAsync: ApiCommon {
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -70,7 +70,7 @@ impl<'a, C: PluginsAsync> Plugins<'a, C> {
     /// Gets the settings for the given user's account
     pub async fn featured(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::plugins_featured(self.borrow()).await
     }
@@ -83,7 +83,7 @@ pub trait PluginsAsyncBoxed: ApiCommon {
     /// Gets the settings for the given user's account
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -92,7 +92,7 @@ pub trait PluginsAsyncBoxed: ApiCommon {
 impl<C: PluginsAsync + WasmNotSync> PluginsAsyncBoxed for C {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as PluginsAsync>::plugins_featured(&self).await
     }

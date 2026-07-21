@@ -1,5 +1,5 @@
 #[cfg(feature = "async")]
-use codex_api_lib::wham::WhamAsync;
+use codex_api_lib::{AsyncTryInto, wham::WhamAsync};
 use codex_api_lib::wham::WhamSub;
 #[cfg(feature = "sync")]
 use codex_api_lib::wham::WhamSync;
@@ -25,13 +25,13 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
     async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -42,13 +42,13 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
     async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

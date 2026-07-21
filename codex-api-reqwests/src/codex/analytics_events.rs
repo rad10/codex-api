@@ -1,5 +1,5 @@
 #[cfg(feature = "async")]
-use codex_api_lib::codex::analytics_events::AnalyticsEventsAsync;
+use codex_api_lib::{AsyncTryInto, codex::analytics_events::AnalyticsEventsAsync};
 #[cfg(feature = "sync")]
 use codex_api_lib::codex::analytics_events::AnalyticsEventsSync;
 use reqwest::IntoUrl;
@@ -18,7 +18,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -29,7 +29,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use wasm_not_send_sync::WasmNotSync;
 
 #[cfg(feature = "async")]
-use crate::FutureNotSend;
+use crate::{AsyncTryInto, FutureNotSend};
 use crate::{ApiCommon, connectors::Connectors};
 
 pub const MODULE_DIRECTORY: &str = "directory";
@@ -70,27 +70,27 @@ pub trait DirectoryAsync: ApiCommon {
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     fn connectors_directory_list_workspace(
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: DirectoryAsync> Directory<'a, C> {
     pub async fn list(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::connectors_directory_list(self.borrow()).await
     }
 
     pub async fn list_workspace(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::connectors_directory_list_workspace(self.borrow()).await
     }
@@ -102,11 +102,11 @@ impl<'a, C: DirectoryAsync> Directory<'a, C> {
 pub trait DirectoryAsyncBoxed: ApiCommon {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     async fn connectors_directory_list_workspace(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -115,14 +115,14 @@ pub trait DirectoryAsyncBoxed: ApiCommon {
 impl<C: DirectoryAsync + WasmNotSync> DirectoryAsyncBoxed for C {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as DirectoryAsync>::connectors_directory_list(&self).await
     }
 
     async fn connectors_directory_list_workspace(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as DirectoryAsync>::connectors_directory_list_workspace(&self).await
     }

@@ -1,5 +1,5 @@
 #[cfg(feature = "async")]
-use codex_api_lib::ps::plugins::PluginsAsync;
+use codex_api_lib::{AsyncTryInto, ps::plugins::PluginsAsync};
 #[cfg(feature = "sync")]
 use codex_api_lib::ps::plugins::PluginsSync;
 use reqwest::IntoUrl;
@@ -18,7 +18,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -26,7 +26,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -34,7 +34,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -45,7 +45,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -53,7 +53,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 
@@ -61,7 +61,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         &self,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

@@ -5,7 +5,7 @@ use std::{
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
-use codex_api_types::codex::{ModelsResponse, SessionSource, ResponsesApiRequest};
+use codex_api_types::codex::{ModelsResponse, ResponsesApiRequest, SessionSource};
 use http::HeaderMap;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
@@ -16,7 +16,7 @@ use crate::codex::analytics_events::AnalyticsEventsAsyncBoxed;
 #[cfg(feature = "sync")]
 use crate::codex::analytics_events::AnalyticsEventsSync;
 #[cfg(feature = "async")]
-use crate::{FutureNotSend, codex::analytics_events::AnalyticsEventsAsync};
+use crate::{AsyncTryInto, FutureNotSend, codex::analytics_events::AnalyticsEventsAsync};
 
 pub mod analytics_events;
 
@@ -60,7 +60,9 @@ pub trait CodexSync: ApiCommon + AnalyticsEventsSync {
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> Result<Self::Response, Self::ApiError>;
+    ) -> Result<Self::Response, Self::ApiError>
+    where
+        Self::Response: TryInto<String>;
 }
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
@@ -89,14 +91,16 @@ pub trait CodexAsync: ApiCommon + AnalyticsEventsAsync {
     /// Collects models from Codex's library
     fn codex_models(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<ModelsResponse>;
+        Self::Response: AsyncTryInto<ModelsResponse>;
 
     /// Collects a response from ChatGPT's API
     fn codex_responses(
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>;
+    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+    where
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -104,7 +108,7 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
     /// Collects models from Codex's library
     pub async fn models(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<ModelsResponse>,
+        C::Response: AsyncTryInto<ModelsResponse>,
     {
         C::codex_models(self.borrow()).await
     }
@@ -114,7 +118,10 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> Result<C::Response, C::ApiError> {
+    ) -> Result<C::Response, C::ApiError>
+    where
+        C::Response: AsyncTryInto<String>,
+    {
         C::codex_responses(self.borrow(), request, options).await
     }
 }
@@ -126,14 +133,16 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
     /// Collects models from Codex's library
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<ModelsResponse>;
+        Self::Response: AsyncTryInto<ModelsResponse>;
 
     /// Collects a response from ChatGPT's API
     async fn codex_responses(
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> Result<Self::Response, Self::ApiError>;
+    ) -> Result<Self::Response, Self::ApiError>
+    where
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -142,7 +151,7 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
 impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<ModelsResponse>,
+        Self::Response: AsyncTryInto<ModelsResponse>,
     {
         <C as CodexAsync>::codex_models(&self).await
     }
@@ -151,7 +160,10 @@ impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
         &self,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> Result<Self::Response, Self::ApiError> {
+    ) -> Result<Self::Response, Self::ApiError>
+    where
+        Self::Response: AsyncTryInto<String>,
+    {
         <C as CodexAsync>::codex_responses(&self, request, options).await
     }
 }

@@ -1,5 +1,5 @@
 #[cfg(feature = "async")]
-use codex_api_lib::accounts::AccountsAsync;
+use codex_api_lib::{AsyncTryInto, accounts::AccountsAsync};
 use codex_api_lib::accounts::AccountsSub;
 #[cfg(feature = "sync")]
 use codex_api_lib::accounts::AccountsSync;
@@ -25,7 +25,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         user_id: Uuid,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -37,7 +37,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
         user_id: Uuid,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

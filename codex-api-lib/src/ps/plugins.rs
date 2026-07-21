@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use wasm_not_send_sync::WasmNotSync;
 
 #[cfg(feature = "async")]
-use crate::FutureNotSend;
+use crate::{AsyncTryInto, FutureNotSend};
 use crate::{ApiCommon, ps::Ps};
 
 pub const MODULE_PLUGINS: &str = "plugins";
@@ -82,40 +82,40 @@ pub trait PluginsAsync: ApiCommon {
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     fn ps_plugins_list(
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     fn ps_plugins_suggested(
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
 impl<'a, C: PluginsAsync> Plugins<'a, C> {
     pub async fn installed(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::ps_plugins_installed(self.borrow()).await
     }
 
     pub async fn list(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::ps_plugins_list(self.borrow()).await
     }
 
     pub async fn suggested(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::ps_plugins_suggested(self.borrow()).await
     }
@@ -127,15 +127,15 @@ impl<'a, C: PluginsAsync> Plugins<'a, C> {
 pub trait PluginsAsyncBoxed: ApiCommon {
     async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 
     async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -144,21 +144,21 @@ pub trait PluginsAsyncBoxed: ApiCommon {
 impl<C: PluginsAsync + WasmNotSync> PluginsAsyncBoxed for C {
     async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as PluginsAsync>::ps_plugins_installed(&self).await
     }
 
     async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as PluginsAsync>::ps_plugins_list(&self).await
     }
 
     async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as PluginsAsync>::ps_plugins_suggested(&self).await
     }

@@ -1,5 +1,5 @@
 #[cfg(feature = "async")]
-use codex_api_lib::ps::PsAsync;
+use codex_api_lib::{AsyncTryInto, ps::PsAsync};
 use codex_api_lib::ps::PsSub;
 #[cfg(feature = "sync")]
 use codex_api_lib::ps::PsSync;
@@ -24,7 +24,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for blocki
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexClient<Auth, Acc, U> {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }
@@ -33,7 +33,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexMiddleware<Auth, Acc, U> {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: AsyncTryInto<String> {
         todo!()
     }
 }

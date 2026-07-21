@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use wasm_not_send_sync::WasmNotSync;
 
 #[cfg(feature = "async")]
-use crate::FutureNotSend;
+use crate::{AsyncTryInto, FutureNotSend};
 use crate::{ApiCommon, codex::Codex};
 
 pub const MODULE_ANALYTICS_EVENTS: &str = "analytics-events";
@@ -58,7 +58,7 @@ pub trait AnalyticsEventsAsync: ApiCommon {
         &self,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -66,7 +66,7 @@ impl<'a, C: AnalyticsEventsAsync> AnalyticsEvents<'a, C> {
     /// Collects models from Codex's library
     pub async fn events(&self) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: AsyncTryInto<String>,
     {
         C::codex_analytics_events_events(self.borrow()).await
     }
@@ -78,7 +78,7 @@ impl<'a, C: AnalyticsEventsAsync> AnalyticsEvents<'a, C> {
 pub trait AnalyticsEventsAsyncBoxed: ApiCommon {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: AsyncTryInto<String>;
 }
 
 #[cfg(feature = "boxed")]
@@ -87,7 +87,7 @@ pub trait AnalyticsEventsAsyncBoxed: ApiCommon {
 impl<C: AnalyticsEventsAsync + WasmNotSync> AnalyticsEventsAsyncBoxed for C {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>,
+        Self::Response: AsyncTryInto<String>,
     {
         <C as AnalyticsEventsAsync>::codex_analytics_events_events(&self).await
     }
