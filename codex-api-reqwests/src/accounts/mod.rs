@@ -4,10 +4,13 @@ use codex_api_lib::accounts::AccountsSub;
 #[cfg(feature = "sync")]
 use codex_api_lib::accounts::AccountsSync;
 use reqwest::IntoUrl;
-#[cfg(feature = "sync")]
 use uuid::Uuid;
 
-use crate::client::{CodexClient, CodexMiddleware, blocking, traits::{CodexAccountId, CodexAuthorization}};
+#[cfg(feature = "middleware")]
+use crate::client::CodexMiddleware;
+#[cfg(feature = "sync")]
+use crate::client::blocking;
+use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
 
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AccountsSub for CodexClient<Auth, Acc, U> {}
 #[cfg(feature = "middleware")]

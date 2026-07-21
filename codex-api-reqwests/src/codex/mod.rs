@@ -1,8 +1,8 @@
-use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, MODULE_CODEX};
+#[cfg(feature = "async")]
+use codex_api_lib::codex::CodexAsync;
 #[cfg(feature = "sync")]
 use codex_api_lib::codex::CodexSync;
-#[cfg(feature = "async")]
-use codex_api_lib::codex::{CodexAsync};
+use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, MODULE_CODEX};
 use reqwest::IntoUrl;
 
 #[cfg(feature = "middleware")]
@@ -36,8 +36,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> CodexSub
 }
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync> CodexAsync
-    for CodexClient<Auth, Acc, U>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
+    CodexAsync for CodexClient<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -66,7 +66,9 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         // Calling API request
         let response = self.client.execute(request_data).await?;
 
-        ApiResponse::from_response(response).await
+        ApiResponse::from_response(response)
+            .await
+            .map_err(Into::into)
     }
 
     async fn codex_responses(
@@ -79,8 +81,8 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync> CodexAsync
-    for CodexMiddleware<Auth, Acc, U>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
+    CodexAsync for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -109,7 +111,9 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         // Calling API request
         let response = self.client.execute(request_data).await?;
 
-        ApiResponse::from_response(response).await.map_err(Into::into)
+        ApiResponse::from_response(response)
+            .await
+            .map_err(Into::into)
     }
 
     async fn codex_responses(
@@ -122,8 +126,8 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync> CodexSync
-    for blocking::CodexClient<Auth, Acc, U>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
+    CodexSync for blocking::CodexClient<Auth, Acc, U>
 {
     fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -152,7 +156,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
         // Calling API request
         let response = self.client.execute(request_data)?;
 
-        response.try_into()
+        response.try_into().map_err(Into::into)
     }
 
     fn codex_responses(

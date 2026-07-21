@@ -1,8 +1,4 @@
-#[cfg(feature = "async")]
-use codex_api_lib::connectors::ConnectorsAsync;
 use codex_api_lib::connectors::ConnectorsSub;
-#[cfg(feature = "sync")]
-use codex_api_lib::connectors::ConnectorsSync;
 
 use crate::client::CodexClient;
 #[cfg(feature = "middleware")]

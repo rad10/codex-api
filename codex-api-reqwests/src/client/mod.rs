@@ -1,13 +1,11 @@
 use codex_api_lib::{ApiCommon, STANDARD_ENDPOINT};
 use http::HeaderMap;
 use reqwest::Client;
-#[cfg(feature = "middleware")]
 use reqwest::IntoUrl;
 #[cfg(feature = "middleware")]
 use reqwest_middleware::ClientWithMiddleware;
 use url::Url;
 
-#[cfg(feature = "middleware")]
 use crate::client::traits::NoAccountId;
 #[cfg(feature = "middleware")]
 use crate::error::MiddlewareError;
@@ -111,18 +109,6 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Au
             ..self
         }
     }
-
-    /// Creates headers for use in API calls
-    pub(crate) fn get_headers(&self) -> HeaderMap {
-        let mut base_headers = self.extra_headers.clone();
-
-        self.authorization
-            .add_authorization_header(&mut base_headers);
-        if let Some(account_id) = self.account_id.as_ref() {
-            account_id.add_account_header(&mut base_headers);
-        }
-        base_headers
-    }
 }
 
 #[cfg(feature = "middleware")]
@@ -179,18 +165,6 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexMiddlewar
             extra_headers: headers,
             ..self
         }
-    }
-
-    /// Creates headers for use in API calls
-    pub(crate) fn get_headers(&self) -> HeaderMap {
-        let mut base_headers = self.extra_headers.clone();
-
-        self.authorization
-            .add_authorization_header(&mut base_headers);
-        if let Some(account_id) = self.account_id.as_ref() {
-            account_id.add_account_header(&mut base_headers);
-        }
-        base_headers
     }
 }
 
@@ -320,18 +294,6 @@ pub mod blocking {
                 extra_headers: headers,
                 ..self
             }
-        }
-
-        /// Creates headers for use in API calls
-        pub(crate) fn get_headers(&self) -> HeaderMap {
-            let mut base_headers = self.extra_headers.clone();
-
-            self.authorization
-                .add_authorization_header(&mut base_headers);
-            if let Some(account_id) = self.account_id.as_ref() {
-                account_id.add_account_header(&mut base_headers);
-            }
-            base_headers
         }
     }
 

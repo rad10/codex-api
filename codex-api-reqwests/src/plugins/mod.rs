@@ -5,13 +5,11 @@ use codex_api_lib::plugins::PluginsSub;
 use codex_api_lib::plugins::PluginsSync;
 use reqwest::IntoUrl;
 
-#[cfg(feature = "async")]
-use crate::client::CodexClient;
 #[cfg(all(feature = "async", feature = "middleware"))]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::traits::{CodexAuthorization, CodexAccountId};
+use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
 
 
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub for CodexClient<Auth, Acc, U> {}

@@ -4,11 +4,13 @@ use codex_api_lib::codex::analytics_events::AnalyticsEventsAsync;
 use codex_api_lib::codex::analytics_events::AnalyticsEventsSync;
 use reqwest::IntoUrl;
 
+#[cfg(feature = "async")]
+use crate::client::CodexClient;
 #[cfg(all(feature = "async", feature = "middleware"))]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
+use crate::client::{traits::{CodexAccountId, CodexAuthorization}};
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AnalyticsEventsAsync for CodexClient<Auth, Acc, U> {

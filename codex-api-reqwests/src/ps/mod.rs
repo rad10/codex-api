@@ -5,13 +5,11 @@ use codex_api_lib::ps::PsSub;
 use codex_api_lib::ps::PsSync;
 use reqwest::IntoUrl;
 
-#[cfg(feature = "async")]
-use crate::client::CodexClient;
 #[cfg(all(feature = "async", feature = "middleware"))]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::traits::{CodexAuthorization, CodexAccountId};
+use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
 
 
 pub mod plugins;

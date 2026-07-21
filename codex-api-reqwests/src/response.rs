@@ -1,7 +1,9 @@
 //! This module handles the Response object that can be created
 
 use http::{HeaderMap, StatusCode};
-use reqwest::{Error, Response, blocking};
+#[cfg(feature = "sync")]
+use reqwest::blocking;
+use reqwest::{Error, Response};
 use serde_json::Value;
 
 
