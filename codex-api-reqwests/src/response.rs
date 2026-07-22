@@ -1,6 +1,6 @@
 //! This module handles the Response object that can be created
 
-use std::ops::{Deref, DerefMut};
+use std::{borrow::{Borrow, BorrowMut}, ops::{Deref, DerefMut}};
 
 use http::StatusCode;
 #[cfg(feature = "sync")]
@@ -114,6 +114,54 @@ impl Deref for BlockingApiResponse {
 
 impl DerefMut for BlockingApiResponse {
     fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl AsRef<Response> for ApiResponse {
+    fn as_ref(&self) -> &Response {
+        &self.0
+    }
+}
+
+impl AsMut<Response> for ApiResponse {
+    fn as_mut(&mut self) -> &mut Response {
+        &mut self.0
+    }
+}
+
+impl Borrow<Response> for ApiResponse {
+    fn borrow(&self) -> &Response {
+        &self.0
+    }
+}
+
+impl BorrowMut<Response> for ApiResponse {
+    fn borrow_mut(&mut self) -> &mut Response {
+        &mut self.0
+    }
+}
+
+impl AsRef<blocking::Response> for BlockingApiResponse {
+    fn as_ref(&self) -> &blocking::Response {
+        &self.0
+    }
+}
+
+impl AsMut<blocking::Response> for BlockingApiResponse {
+    fn as_mut(&mut self) -> &mut blocking::Response {
+        &mut self.0
+    }
+}
+
+impl Borrow<blocking::Response> for BlockingApiResponse {
+    fn borrow(&self) -> &blocking::Response {
+        &self.0
+    }
+}
+
+impl BorrowMut<blocking::Response> for BlockingApiResponse {
+    fn borrow_mut(&mut self) -> &mut blocking::Response {
         &mut self.0
     }
 }
