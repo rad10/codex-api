@@ -18,6 +18,8 @@ use crate::agent_path::AgentPath;
 use crate::response_item::ResponseItem;
 use crate::thread_id::ThreadId;
 
+pub mod response_stream_event;
+
 const PERSONALITY_PLACEHOLDER: &str = "{{ personality }}";
 pub const SPEED_TIER_FAST: &str = "fast";
 
@@ -26,6 +28,8 @@ pub const SPEED_TIER_FAST: &str = "fast";
 /// This is not a catalog service tier id. It means the user intentionally
 /// selected no service tier, so model catalog defaults should not apply.
 pub const SERVICE_TIER_DEFAULT_REQUEST_VALUE: &str = "default";
+
+pub use crate::response_event::ResponseEvent;
 
 /// See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
