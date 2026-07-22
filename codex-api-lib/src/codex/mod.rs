@@ -5,7 +5,7 @@ use std::{
 
 #[cfg(feature = "boxed")]
 use async_trait::async_trait;
-use codex_api_types::codex::{ModelsResponse, ResponsesApiRequest, SessionSource};
+use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest, SessionSource};
 use http::HeaderMap;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
@@ -62,7 +62,7 @@ pub trait CodexSync: ApiCommon + AnalyticsEventsSync {
         options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String>;
+        Self::Response: TryInto<Vec<ResponseEvent>>;
 }
 
 #[cfg(all(feature = "sync", not(feature = "async")))]
@@ -80,7 +80,7 @@ impl<'a, C: CodexSync> Codex<'a, C> {
         options: ResponsesOptions,
     ) -> Result<C::Response, C::ApiError>
     where
-        C::Response: TryInto<String>,
+        C::Response: TryInto<Vec<ResponseEvent>>,
     {
         C::codex_responses(self.borrow(), request, options)
     }
@@ -100,7 +100,7 @@ pub trait CodexAsync: ApiCommon + AnalyticsEventsAsync {
         options: ResponsesOptions,
     ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
     where
-        Self::Response: AsyncTryInto<String>;
+        Self::Response: AsyncTryInto<Vec<ResponseEvent>>;
 }
 
 #[cfg(all(feature = "async", not(feature = "sync")))]
@@ -120,7 +120,7 @@ impl<'a, C: CodexAsync> Codex<'a, C> {
         options: ResponsesOptions,
     ) -> Result<C::Response, C::ApiError>
     where
-        C::Response: AsyncTryInto<String>,
+        C::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         C::codex_responses(self.borrow(), request, options).await
     }
@@ -142,7 +142,7 @@ pub trait CodexAsyncBoxed: ApiCommon + AnalyticsEventsAsyncBoxed {
         options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String>;
+        Self::Response: AsyncTryInto<Vec<ResponseEvent>>;
 }
 
 #[cfg(feature = "boxed")]
@@ -162,7 +162,7 @@ impl<C: CodexAsync + WasmNotSync> CodexAsyncBoxed for C {
         options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String>,
+        Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         <C as CodexAsync>::codex_responses(&self, request, options).await
     }
