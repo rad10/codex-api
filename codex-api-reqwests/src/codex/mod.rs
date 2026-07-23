@@ -274,6 +274,7 @@ impl TryFrom<BlockingApiResponse> for codex_api_types::codex::ModelsResponse {
     }
 }
 
+#[cfg(feature = "async")]
 impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
     type Error = response_stream::ApiError;
 
