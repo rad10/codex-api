@@ -1,7 +1,7 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use http::{HeaderMap, HeaderValue, header::AUTHORIZATION};
-use uuid::Uuid;
+use uuid::{Uuid, fmt::Hyphenated};
 
 /// Describes that the object can be utilized as an authorization header for
 /// the Codex Client
@@ -78,15 +78,69 @@ impl CodexAuthorization for String {
     }
 }
 
+impl CodexAuthorization for &str {
+    fn authorization(&self) -> String {
+        self.to_string()
+    }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        let mut header: Option<HeaderValue> = self.parse().ok();
+        if let Some(header_data) = &mut header {
+            header_data.set_sensitive(true)
+        }
+        header
+    }
+}
+
+impl<'a> CodexAuthorization for Cow<'a, str> {
+    fn authorization(&self) -> String {
+        self.to_string()
+    }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        let mut header: Option<HeaderValue> = self.parse().ok();
+        if let Some(header_data) = &mut header {
+            header_data.set_sensitive(true)
+        }
+        header
+    }
+}
+
 impl CodexAccountId for String {
     fn account_id(&self) -> String {
         self.clone()
+    }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        let mut header: Option<HeaderValue> = self.parse().ok();
+        if let Some(header_data) = &mut header {
+            header_data.set_sensitive(true)
+        }
+        header
+    }
+}
+
+impl<'a> CodexAccountId for &'a str {
+    fn account_id(&self) -> String {
+        self.to_string()
+    }
+}
+
+impl<'a> CodexAccountId for Cow<'a, str> {
+    fn account_id(&self) -> String {
+        self.to_string()
     }
 }
 
 impl CodexAccountId for Uuid {
     fn account_id(&self) -> String {
-        self.as_hyphenated().to_string()
+        self.as_hyphenated().account_id()
+    }
+}
+
+impl CodexAccountId for Hyphenated {
+    fn account_id(&self) -> String {
+        self.to_string()
     }
 }
 
