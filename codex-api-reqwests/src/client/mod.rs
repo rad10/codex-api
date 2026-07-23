@@ -73,22 +73,6 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, &'sta
     }
 }
 
-impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, Url> {
-    pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
-        Ok(Self::with_client(Client::builder().build()?, authorization))
-    }
-
-    pub fn with_client(client: Client, authorization: Auth) -> Self {
-        Self {
-            client,
-            endpoint: STANDARD_ENDPOINT.parse().unwrap(),
-            authorization,
-            account_id: None,
-            extra_headers: HeaderMap::new(),
-        }
-    }
-}
-
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Auth, Acc, End> {
     pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexClient<Auth, A, End> {
         let Self {
@@ -124,6 +108,23 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Au
         }
     }
 
+    pub fn with_endpoint_as_url(self) -> Result<CodexClient<Auth, Acc, Url>, reqwest::Error> {
+        let Self {
+            client,
+            endpoint,
+            authorization,
+            account_id,
+            extra_headers,
+        } = self;
+        Ok(CodexClient {
+            client,
+            endpoint: endpoint.into_url()?,
+            authorization,
+            account_id,
+            extra_headers,
+        })
+    }
+
     pub fn with_headers(self, headers: HeaderMap) -> Self {
         Self {
             extra_headers: headers,
@@ -142,19 +143,6 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexMiddleware<Auth, Acc, &
         Self {
             client,
             endpoint: STANDARD_ENDPOINT,
-            authorization,
-            account_id: None,
-            extra_headers: HeaderMap::new(),
-        }
-    }
-}
-
-#[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexMiddleware<Auth, Acc, Url> {
-    pub fn with_middleware(client: ClientWithMiddleware, authorization: Auth) -> Self {
-        Self {
-            client,
-            endpoint: STANDARD_ENDPOINT.parse().unwrap(),
             authorization,
             account_id: None,
             extra_headers: HeaderMap::new(),
@@ -196,6 +184,23 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexMiddlewar
             account_id,
             extra_headers,
         }
+    }
+
+    pub fn with_endpoint_as_url(self) -> Result<CodexMiddleware<Auth, Acc, Url>, reqwest::Error> {
+        let Self {
+            client,
+            endpoint,
+            authorization,
+            account_id,
+            extra_headers,
+        } = self;
+        Ok(CodexMiddleware {
+            client,
+            endpoint: endpoint.into_url()?,
+            authorization,
+            account_id,
+            extra_headers,
+        })
     }
 
     pub fn with_headers(self, headers: HeaderMap) -> Self {
@@ -303,22 +308,6 @@ pub mod blocking {
         }
     }
 
-    impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, Url> {
-        pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
-            Ok(Self::with_client(Client::builder().build()?, authorization))
-        }
-
-        pub fn with_client(client: Client, authorization: Auth) -> Self {
-            Self {
-                client,
-                endpoint: STANDARD_ENDPOINT.parse().unwrap(),
-                authorization,
-                account_id: None,
-                extra_headers: HeaderMap::new(),
-            }
-        }
-    }
-
     impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Auth, Acc, End> {
         pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexClient<Auth, A, End> {
             let Self {
@@ -352,6 +341,23 @@ pub mod blocking {
                 account_id,
                 extra_headers,
             }
+        }
+
+        pub fn with_endpoint_as_url(self) -> Result<CodexClient<Auth, Acc, Url>, reqwest::Error> {
+            let Self {
+                client,
+                endpoint,
+                authorization,
+                account_id,
+                extra_headers,
+            } = self;
+            Ok(CodexClient {
+                client,
+                endpoint: endpoint.into_url()?,
+                authorization,
+                account_id,
+                extra_headers,
+            })
         }
 
         pub fn with_headers(self, headers: HeaderMap) -> Self {
