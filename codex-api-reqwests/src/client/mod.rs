@@ -57,7 +57,7 @@ pub struct CodexMiddleware<
     pub(crate) extra_headers: HeaderMap,
 }
 
-impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
+impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, &'static str> {
     pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
         Ok(Self::with_client(Client::builder().build()?, authorization))
     }
@@ -121,7 +121,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Au
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization> CodexMiddleware<Auth, NoAccountId, &'static str> {
+impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexMiddleware<Auth, Acc, &'static str> {
     pub fn with_middleware(client: ClientWithMiddleware, authorization: Auth) -> Self {
         Self {
             client,
@@ -258,7 +258,7 @@ pub mod blocking {
         pub(crate) extra_headers: HeaderMap,
     }
 
-    impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
+    impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, &'static str> {
         pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
             Ok(Self::with_client(Client::builder().build()?, authorization))
         }
