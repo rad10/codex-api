@@ -5,7 +5,8 @@ use codex_api_lib::codex::CodexSync;
 use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX};
 #[cfg(feature = "async")]
 use codex_api_lib::{AsyncTryFrom, AsyncTryInto, codex::CodexAsync};
-use http::StatusCode;
+use codex_api_types::codex::{SessionSource, SubAgentSource};
+use http::{HeaderValue, StatusCode};
 use reqwest::IntoUrl;
 
 #[cfg(feature = "middleware")]
@@ -95,8 +96,15 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
 
         let mut headers = self.extra_headers.clone();
+        headers.extend(options.extra_headers);
         if let Some(account_id) = self.account_id.as_ref() {
             account_id.add_account_header(&mut headers);
+        }
+        if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
+            headers.insert("x-client-request-id", thread_id);
+        }
+        if let Some(subagent) = options.session_source.and_then(subagent_header) {
+            headers.insert("x-openai-subagent", subagent);
         }
         // Creating API call
         let request_data = self
@@ -104,6 +112,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .get(api_url)
             .bearer_auth(&self.authorization)
             .headers(headers)
+            .json(&request)
             .build()?;
 
         // Calling API request
@@ -167,8 +176,15 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
 
         let mut headers = self.extra_headers.clone();
+        headers.extend(options.extra_headers);
         if let Some(account_id) = self.account_id.as_ref() {
             account_id.add_account_header(&mut headers);
+        }
+        if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
+            headers.insert("x-client-request-id", thread_id);
+        }
+        if let Some(subagent) = options.session_source.and_then(subagent_header) {
+            headers.insert("x-openai-subagent", subagent);
         }
         // Creating API call
         let request_data = self
@@ -176,6 +192,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .get(api_url)
             .bearer_auth(&self.authorization)
             .headers(headers)
+            .json(&request)
             .build()?;
 
         // Calling API request
@@ -238,8 +255,15 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
 
         let mut headers = self.extra_headers.clone();
+        headers.extend(options.extra_headers);
         if let Some(account_id) = self.account_id.as_ref() {
             account_id.add_account_header(&mut headers);
+        }
+        if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
+            headers.insert("x-client-request-id", thread_id);
+        }
+        if let Some(subagent) = options.session_source.and_then(subagent_header) {
+            headers.insert("x-openai-subagent", subagent);
         }
         // Creating API call
         let request_data = self
@@ -247,6 +271,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
             .get(api_url)
             .bearer_auth(&self.authorization)
             .headers(headers)
+            .json(&request)
             .build()?;
 
         // Calling API request
@@ -280,7 +305,11 @@ impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
         CombineLines {
-            inner: reqwest::Response::from(value).text().await?.lines().map(|line| line.to_owned()),
+            inner: reqwest::Response::from(value)
+                .text()
+                .await?
+                .lines()
+                .map(|line| line.to_owned()),
             func: |line_iter| {
                 let mut lines = Vec::new();
 
@@ -352,5 +381,22 @@ impl<I, U, F: FnMut(&mut I) -> Option<U>> Iterator for CombineLines<I, U, F> {
 
     fn next(&mut self) -> Option<Self::Item> {
         (self.func)(&mut self.inner)
+    }
+}
+
+fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
+    match source {
+        SessionSource::SubAgent(SubAgentSource::Review) => Some(HeaderValue::from_static("review")),
+        SessionSource::SubAgent(SubAgentSource::Compact) => {
+            Some(HeaderValue::from_static("compact"))
+        }
+        SessionSource::SubAgent(SubAgentSource::MemoryConsolidation) => {
+            Some(HeaderValue::from_static("memory_consolidation"))
+        }
+        SessionSource::SubAgent(SubAgentSource::ThreadSpawn { .. }) => {
+            Some(HeaderValue::from_static("collab_spawn"))
+        }
+        SessionSource::SubAgent(SubAgentSource::Other(label)) => label.parse().ok(),
+        _ => None,
     }
 }
