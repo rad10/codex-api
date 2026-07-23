@@ -1,7 +1,7 @@
-#[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryInto, codex::analytics_events::AnalyticsEventsAsync};
 #[cfg(feature = "sync")]
 use codex_api_lib::codex::analytics_events::AnalyticsEventsSync;
+#[cfg(feature = "async")]
+use codex_api_lib::{AsyncTryInto, codex::analytics_events::AnalyticsEventsAsync};
 use reqwest::IntoUrl;
 
 #[cfg(feature = "async")]
@@ -10,35 +10,40 @@ use crate::client::CodexClient;
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::{traits::{CodexAccountId, CodexAuthorization}};
+use crate::client::traits::{CodexAccountId, CodexAuthorization};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AnalyticsEventsAsync for CodexClient<Auth, Acc, U> {
-    async fn codex_analytics_events_events(
-        &self,
-    ) -> Result<Self::Response, Self::ApiError>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+    AnalyticsEventsAsync for CodexClient<Auth, Acc, U>
+{
+    async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> AnalyticsEventsAsync for CodexMiddleware<Auth, Acc, U> {
-    async fn codex_analytics_events_events(
-        &self,
-    ) -> Result<Self::Response, Self::ApiError>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+    AnalyticsEventsAsync for CodexMiddleware<Auth, Acc, U>
+{
+    async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsSync for blocking::CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsSync
+    for blocking::CodexClient<Auth, Acc, U>
+{
     fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: TryInto<String>,
+    {
         todo!()
     }
 }

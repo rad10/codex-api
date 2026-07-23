@@ -2,14 +2,13 @@ use std::{error::Error, fmt::Display};
 
 use http::StatusCode;
 
-
 /// Describes all Codex Errors that can occur on the API side
 #[derive(Debug)]
 pub enum ApiError {
     /// URL failed to parse properly
     Endpoint(url::ParseError),
     /// Reqwest had an internal error
-    Reqwest(reqwest::Error)
+    Reqwest(reqwest::Error),
 }
 
 /// Describes all Codex Errors that can occur on the API side
@@ -19,7 +18,7 @@ pub enum MiddlewareError {
     /// URL failed to parse properly
     Endpoint(url::ParseError),
     /// Reqwest had an internal error
-    Middleware(reqwest_middleware::Error)
+    Middleware(reqwest_middleware::Error),
 }
 
 /// Provides an error that is used for parsing model values from responses
@@ -46,7 +45,9 @@ impl From<reqwest::Error> for ApiError {
 impl Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApiError::Endpoint(parse_error) => write!(f, "failed to create endpoint url: {parse_error}"),
+            ApiError::Endpoint(parse_error) => {
+                write!(f, "failed to create endpoint url: {parse_error}")
+            }
             ApiError::Reqwest(error) => error.fmt(f),
         }
     }
@@ -86,7 +87,9 @@ impl From<reqwest_middleware::Error> for MiddlewareError {
 impl Display for MiddlewareError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MiddlewareError::Endpoint(parse_error) => write!(f, "failed to create endpoint url: {parse_error}"),
+            MiddlewareError::Endpoint(parse_error) => {
+                write!(f, "failed to create endpoint url: {parse_error}")
+            }
             MiddlewareError::Middleware(error) => error.fmt(f),
         }
     }
@@ -117,8 +120,12 @@ impl From<reqwest::Error> for ParsingError {
 impl Display for ParsingError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ParsingError::InvalidStatus(status_code) => write!(f, "received unexpected status code {status_code}"),
-            ParsingError::FailedDeserialization(error) => write!(f, "failed to deserialize object: {error}"),
+            ParsingError::InvalidStatus(status_code) => {
+                write!(f, "received unexpected status code {status_code}")
+            }
+            ParsingError::FailedDeserialization(error) => {
+                write!(f, "failed to deserialize object: {error}")
+            }
         }
     }
 }

@@ -84,7 +84,9 @@ impl Display for ApiError {
             ApiError::CyberPolicy { message } => write!(f, "cyber policy: {message}"),
             ApiError::ServerOverloaded => f.write_str("server overloaded"),
             ApiError::ReqwestError(error) => error.fmt(f),
-            ApiError::InvalidResponseStream => f.write_str("an invalid response was given that failed to parse"),
+            ApiError::InvalidResponseStream => {
+                f.write_str("an invalid response was given that failed to parse")
+            }
             ApiError::IO(error) => error.fmt(f),
         }
     }

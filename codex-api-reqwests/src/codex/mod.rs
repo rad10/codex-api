@@ -11,10 +11,10 @@ use reqwest::IntoUrl;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
-#[cfg(feature = "sync")]
-use crate::{client::blocking, response::BlockingApiResponse};
 #[cfg(feature = "async")]
 use crate::response::ApiResponse;
+#[cfg(feature = "sync")]
+use crate::{client::blocking, response::BlockingApiResponse};
 use crate::{
     client::{
         CodexClient,

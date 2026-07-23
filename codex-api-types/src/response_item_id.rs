@@ -41,7 +41,7 @@ impl ResponseItemId {
     pub fn with_suffix(prefix: &str, suffix: impl fmt::Display) -> Self {
         Self(format!("{prefix}_{suffix}"))
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.0
     }

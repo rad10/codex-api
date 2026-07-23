@@ -5,9 +5,9 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
+use crate::{ApiCommon, wham::Wham};
 #[cfg(feature = "async")]
 use crate::{AsyncTryInto, FutureNotSend};
-use crate::{ApiCommon, wham::Wham};
 
 pub const MODULE_PROFILES: &str = "profiles";
 pub const ENDPOINT_ME: &str = "me";

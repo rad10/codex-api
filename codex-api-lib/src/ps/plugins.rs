@@ -5,9 +5,9 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
+use crate::{ApiCommon, ps::Ps};
 #[cfg(feature = "async")]
 use crate::{AsyncTryInto, FutureNotSend};
-use crate::{ApiCommon, ps::Ps};
 
 pub const MODULE_PLUGINS: &str = "plugins";
 pub const ENDPOINT_INSTALLED: &str = "installed";

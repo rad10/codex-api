@@ -5,9 +5,9 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
+use crate::{ApiCommon, connectors::Connectors};
 #[cfg(feature = "async")]
 use crate::{AsyncTryInto, FutureNotSend};
-use crate::{ApiCommon, connectors::Connectors};
 
 pub const MODULE_DIRECTORY: &str = "directory";
 pub const ENDPOINT_LIST: &str = "list";

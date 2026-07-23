@@ -2,11 +2,11 @@
 use schemars::JsonSchema;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "js")]
-use wasm_bindgen::prelude::wasm_bindgen;
 use std::{borrow::Borrow, fmt, ops::Deref, str::FromStr};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
+#[cfg(feature = "js")]
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

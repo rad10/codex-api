@@ -5,9 +5,9 @@ use async_trait::async_trait;
 #[cfg(feature = "boxed")]
 use wasm_not_send_sync::WasmNotSync;
 
+use crate::{ApiCommon, codex::Codex};
 #[cfg(feature = "async")]
 use crate::{AsyncTryInto, FutureNotSend};
-use crate::{ApiCommon, codex::Codex};
 
 pub const MODULE_ANALYTICS_EVENTS: &str = "analytics-events";
 pub const ENDPOINT_EVENTS: &str = "events";

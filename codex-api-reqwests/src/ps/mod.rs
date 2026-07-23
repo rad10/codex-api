@@ -1,48 +1,68 @@
-#[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryInto, ps::PsAsync};
 use codex_api_lib::ps::PsSub;
 #[cfg(feature = "sync")]
 use codex_api_lib::ps::PsSync;
+#[cfg(feature = "async")]
+use codex_api_lib::{AsyncTryInto, ps::PsAsync};
 use reqwest::IntoUrl;
 
 #[cfg(all(feature = "async", feature = "middleware"))]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
 use crate::client::blocking;
-use crate::client::{CodexClient, traits::{CodexAccountId, CodexAuthorization}};
-
+use crate::client::{
+    CodexClient,
+    traits::{CodexAccountId, CodexAuthorization},
+};
 
 pub mod plugins;
 
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for CodexClient<Auth, Acc, U> {}
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
+    for CodexClient<Auth, Acc, U>
+{
+}
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for CodexMiddleware<Auth, Acc, U> {}
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
+    for CodexMiddleware<Auth, Acc, U>
+{
+}
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub for blocking::CodexClient<Auth, Acc, U> {}
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
+    for blocking::CodexClient<Auth, Acc, U>
+{
+}
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync
+    for CodexClient<Auth, Acc, U>
+{
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync for CodexMiddleware<Auth, Acc, U> {
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync
+    for CodexMiddleware<Auth, Acc, U>
+{
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSync for blocking::CodexClient<Auth, Acc, U> {
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSync
+    for blocking::CodexClient<Auth, Acc, U>
+{
     fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<String> {
+        Self::Response: TryInto<String>,
+    {
         todo!()
     }
 }

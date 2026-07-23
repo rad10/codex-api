@@ -1,6 +1,9 @@
 //! This module handles the Response object that can be created
 
-use std::{borrow::{Borrow, BorrowMut}, ops::{Deref, DerefMut}};
+use std::{
+    borrow::{Borrow, BorrowMut},
+    ops::{Deref, DerefMut},
+};
 
 use http::StatusCode;
 #[cfg(feature = "sync")]

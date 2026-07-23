@@ -215,12 +215,17 @@ pub struct RateLimitWindow {
 impl RateLimitWindow {
     /// Rolling window duration, in minutes.
     pub fn window_minutes(&self) -> Option<Duration> {
-        self.window_minutes.clone().map(i64::unsigned_abs).map(Duration::from_mins)
+        self.window_minutes
+            .clone()
+            .map(i64::unsigned_abs)
+            .map(Duration::from_mins)
     }
 
     /// Unix timestamp (seconds since epoch) when the window resets.
     pub fn resets_at(&self) -> Option<DateTime<Utc>> {
-        self.resets_at.clone().and_then(DateTime::from_timestamp_secs)
+        self.resets_at
+            .clone()
+            .and_then(DateTime::from_timestamp_secs)
     }
 }
 
