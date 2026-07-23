@@ -4,16 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-codex-api-lib = { version = "0.1.0", path = "../codex-api-lib", default-features = false }
-codex-api-types = { version = "0.1.0", path = "../codex-api-types", default-features = false, features = ["serde"] }
-http = { version = "1.4.2", default-features = false }
-regex-lite = { version = "0.1.9", default-features = false, features = ["std", "string"] }
-reqwest = { version = "0.13.4", default-features = false, features = ["json", "query"] }
-reqwest-middleware = { version = "0.5.2", default-features = false, optional = true, features = ["json", "query"] }
-serde = { version = "1.0.229", default-features = false }
-serde_json = "1.0.151"
-url = { version = "2.5.8", default-features = false }
-uuid = { version = "1.24.0", default-features = false, features = ["v4"] }
+codex-api-lib = { version = "^0.1", path = "../codex-api-lib", default-features = false }
+codex-api-types = { version = "^0.1", path = "../codex-api-types", default-features = false, features = ["serde"] }
+http = { version = "^1", default-features = false }
+regex-lite = { version = "^0.1", default-features = false, features = ["std", "string"] }
+reqwest = { version = "^0.13", default-features = false, features = ["json", "query"] }
+reqwest-middleware = { version = "^0", default-features = false, optional = true, features = ["json", "query"] }
+serde = { version = "^1", default-features = false }
+serde_json = "^1"
+url = { version = "^2.5", default-features = false }
+uuid = { version = "^1", default-features = false, features = ["v4"] }
 
 [features]
 sync = ["codex-api-lib/sync", "reqwest/blocking"]
