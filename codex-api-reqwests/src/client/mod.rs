@@ -58,7 +58,11 @@ pub struct CodexMiddleware<
 }
 
 impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
-    pub fn new(client: Client, authorization: Auth) -> Self {
+    pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
+        Ok(Self::with_client(Client::builder().build()?, authorization))
+    }
+
+    pub fn with_client(client: Client, authorization: Auth) -> Self {
         Self {
             client,
             endpoint: STANDARD_ENDPOINT,
@@ -255,7 +259,11 @@ pub mod blocking {
     }
 
     impl<Auth: CodexAuthorization> CodexClient<Auth, NoAccountId, &'static str> {
-        pub fn new(client: Client, authorization: Auth) -> Self {
+        pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
+            Ok(Self::with_client(Client::builder().build()?, authorization))
+        }
+
+        pub fn with_client(client: Client, authorization: Auth) -> Self {
             Self {
                 client,
                 endpoint: STANDARD_ENDPOINT,
