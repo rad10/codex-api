@@ -73,6 +73,22 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, &'sta
     }
 }
 
+impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, Url> {
+    pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
+        Ok(Self::with_client(Client::builder().build()?, authorization))
+    }
+
+    pub fn with_client(client: Client, authorization: Auth) -> Self {
+        Self {
+            client,
+            endpoint: STANDARD_ENDPOINT.parse().unwrap(),
+            authorization,
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Auth, Acc, End> {
     pub fn with_account<A: CodexAccountId>(self, account: A) -> CodexClient<Auth, A, End> {
         let Self {
@@ -126,6 +142,19 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexMiddleware<Auth, Acc, &
         Self {
             client,
             endpoint: STANDARD_ENDPOINT,
+            authorization,
+            account_id: None,
+            extra_headers: HeaderMap::new(),
+        }
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexMiddleware<Auth, Acc, Url> {
+    pub fn with_middleware(client: ClientWithMiddleware, authorization: Auth) -> Self {
+        Self {
+            client,
+            endpoint: STANDARD_ENDPOINT.parse().unwrap(),
             authorization,
             account_id: None,
             extra_headers: HeaderMap::new(),
@@ -267,6 +296,22 @@ pub mod blocking {
             Self {
                 client,
                 endpoint: STANDARD_ENDPOINT,
+                authorization,
+                account_id: None,
+                extra_headers: HeaderMap::new(),
+            }
+        }
+    }
+
+    impl<Auth: CodexAuthorization, Acc: CodexAccountId> CodexClient<Auth, Acc, Url> {
+        pub fn new(authorization: Auth) -> Result<Self, reqwest::Error> {
+            Ok(Self::with_client(Client::builder().build()?, authorization))
+        }
+
+        pub fn with_client(client: Client, authorization: Auth) -> Self {
+            Self {
+                client,
+                endpoint: STANDARD_ENDPOINT.parse().unwrap(),
                 authorization,
                 account_id: None,
                 extra_headers: HeaderMap::new(),
