@@ -23,6 +23,9 @@ use crate::{
     error::ParsingError,
 };
 
+pub use codex_api_lib::codex::ResponsesOptions;
+pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
+
 pub mod analytics_events;
 mod response_stream;
 
@@ -49,7 +52,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<codex_api_types::codex::ModelsResponse>,
+        Self::Response: AsyncTryInto<ModelsResponse>,
     {
         // Creating URL
         let api_url = self
@@ -81,11 +84,11 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 
     async fn codex_responses(
         &self,
-        request: codex_api_types::codex::ResponsesApiRequest,
-        options: codex_api_lib::codex::ResponsesOptions,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<Vec<codex_api_types::codex::ResponseEvent>>,
+        Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         // Creating URL
         let api_url = self
@@ -129,7 +132,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<codex_api_types::codex::ModelsResponse>,
+        Self::Response: AsyncTryInto<ModelsResponse>,
     {
         // Creating URL
         let api_url = self
@@ -161,11 +164,11 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 
     async fn codex_responses(
         &self,
-        request: codex_api_types::codex::ResponsesApiRequest,
-        options: codex_api_lib::codex::ResponsesOptions,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<Vec<codex_api_types::codex::ResponseEvent>>,
+        Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         // Creating URL
         let api_url = self
@@ -209,7 +212,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 {
     fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<codex_api_types::codex::ModelsResponse>,
+        Self::Response: TryInto<ModelsResponse>,
     {
         // Creating URL
         let api_url = self
@@ -240,11 +243,11 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 
     fn codex_responses(
         &self,
-        request: codex_api_types::codex::ResponsesApiRequest,
-        options: codex_api_lib::codex::ResponsesOptions,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
     ) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: TryInto<Vec<codex_api_types::codex::ResponseEvent>>,
+        Self::Response: TryInto<Vec<ResponseEvent>>,
     {
         // Creating URL
         let api_url = self
@@ -282,7 +285,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 }
 
 #[cfg(feature = "async")]
-impl AsyncTryFrom<ApiResponse> for codex_api_types::codex::ModelsResponse {
+impl AsyncTryFrom<ApiResponse> for ModelsResponse {
     type Error = ParsingError;
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
@@ -291,7 +294,7 @@ impl AsyncTryFrom<ApiResponse> for codex_api_types::codex::ModelsResponse {
 }
 
 #[cfg(feature = "sync")]
-impl TryFrom<BlockingApiResponse> for codex_api_types::codex::ModelsResponse {
+impl TryFrom<BlockingApiResponse> for ModelsResponse {
     type Error = ParsingError;
 
     fn try_from(value: BlockingApiResponse) -> Result<Self, Self::Error> {
@@ -300,7 +303,7 @@ impl TryFrom<BlockingApiResponse> for codex_api_types::codex::ModelsResponse {
 }
 
 #[cfg(feature = "async")]
-impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
+impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
     type Error = response_stream::ApiError;
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
@@ -333,7 +336,7 @@ impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
 }
 
 #[cfg(feature = "sync")]
-impl TryFrom<BlockingApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
+impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
     type Error = response_stream::ApiError;
 
     fn try_from(value: BlockingApiResponse) -> Result<Self, Self::Error> {
