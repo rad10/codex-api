@@ -7,3 +7,5 @@ pub mod plugins;
 pub mod ps;
 pub mod response;
 pub mod wham;
+
+pub use reqwest::IntoUrl;
