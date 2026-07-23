@@ -12,6 +12,9 @@ uuid = { version = "^1", default-features = false, features = ["serde", "v4"] }
 wasm-not-send-sync = { version = "^0", optional = true }
 
 [features]
+default = ["std", "js"]
+std = ["http/std"]
+js = ["uuid/js"]
 sync = []
 async = ["dep:wasm-not-send-sync"]
 boxed = ["async", "dep:async-trait"]
