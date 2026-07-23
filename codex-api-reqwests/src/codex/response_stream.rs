@@ -13,11 +13,11 @@ pub(super) struct StreamEvent {
     /// Contains the contents in "event"
     event: String,
     /// Contains the contents in "data"
-    data: ResponsesStreamEvent,
+    pub(super) data: ResponsesStreamEvent,
 }
 
 impl FromStr for StreamEvent {
-    type Err = ApiError<R>;
+    type Err = ApiError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
@@ -31,8 +31,7 @@ impl FromStr for StreamEvent {
             .next()
             .and_then(|line| line.strip_prefix("data: "))
             .and_then(|value| serde_json::from_str(value).ok())
-            .ok_or(ApiError::InvalidResponseStream)?
-            .trim();
+            .ok_or(ApiError::InvalidResponseStream)?;
         Ok(Self { event, data })
     }
 }
