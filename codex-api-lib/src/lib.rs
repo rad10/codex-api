@@ -2,6 +2,7 @@
 use wasm_not_send_sync::WasmNotSend;
 
 pub mod accounts;
+#[cfg(feature = "async")]
 mod async_from;
 pub mod codex;
 pub mod connectors;

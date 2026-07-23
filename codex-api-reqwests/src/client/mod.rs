@@ -9,10 +9,11 @@ use url::Url;
 use crate::client::traits::NoAccountId;
 #[cfg(feature = "middleware")]
 use crate::error::MiddlewareError;
+#[cfg(feature = "async")]
+use crate::response::ApiResponse;
 use crate::{
     client::traits::{CodexAccountId, CodexAuthorization},
     error::ApiError,
-    response::ApiResponse,
 };
 
 pub mod traits;
@@ -168,6 +169,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexMiddlewar
     }
 }
 
+#[cfg(feature = "async")]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
     for CodexClient<Auth, Acc, U>
 {
@@ -176,7 +178,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
     type ApiError = ApiError;
 }
 
-#[cfg(feature = "middleware")]
+#[cfg(all(feature = "async", feature = "middleware"))]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ApiCommon
     for CodexMiddleware<Auth, Acc, U>
 {

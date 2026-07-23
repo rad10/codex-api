@@ -12,7 +12,7 @@ use reqwest::IntoUrl;
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
 #[cfg(feature = "sync")]
-use crate::client::blocking;
+use crate::{client::blocking, response::BlockingApiResponse};
 #[cfg(feature = "async")]
 use crate::response::ApiResponse;
 use crate::{
@@ -21,7 +21,6 @@ use crate::{
         traits::{CodexAccountId, CodexAuthorization},
     },
     error::ParsingError,
-    response::BlockingApiResponse,
 };
 
 pub mod analytics_events;
@@ -291,6 +290,7 @@ impl AsyncTryFrom<ApiResponse> for codex_api_types::codex::ModelsResponse {
     }
 }
 
+#[cfg(feature = "sync")]
 impl TryFrom<BlockingApiResponse> for codex_api_types::codex::ModelsResponse {
     type Error = ParsingError;
 
@@ -332,6 +332,7 @@ impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
     }
 }
 
+#[cfg(feature = "sync")]
 impl TryFrom<BlockingApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
     type Error = response_stream::ApiError;
 
