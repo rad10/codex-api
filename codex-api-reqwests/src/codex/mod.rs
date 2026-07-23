@@ -278,27 +278,51 @@ impl AsyncTryFrom<ApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
     type Error = response_stream::ApiError;
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
-        CombineLines(value.text().await?.lines().map(|line| line.to_owned()))
-            .map(|event| {
-                event
-                    .parse()
-                    .and_then(response_stream::process_responses_event)
-                    .and_then(|processing| {
-                        processing.ok_or(response_stream::ApiError::InvalidResponseStream)
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()
+        CombineLines {
+            inner: reqwest::Response::from(value).text().await?.lines().map(|line| line.to_owned()),
+            func: |line_iter| {
+                let mut lines = Vec::new();
+
+                while let Some(line) = line_iter.next().filter(|s| !s.is_empty()) {
+                    lines.push(line);
+                }
+                (!lines.is_empty()).then(|| lines.concat())
+            },
+        }
+        .map(|event| {
+            event
+                .parse()
+                .map(|data: response_stream::StreamEvent| data.data)
+                .and_then(response_stream::process_responses_event)
+                .and_then(|processing| {
+                    processing.ok_or(response_stream::ApiError::InvalidResponseStream)
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()
     }
 }
 
 impl TryFrom<BlockingApiResponse> for Vec<codex_api_types::codex::ResponseEvent> {
     type Error = response_stream::ApiError;
 
-    fn try_from(mut value: BlockingApiResponse) -> Result<Self, Self::Error> {
+    fn try_from(value: BlockingApiResponse) -> Result<Self, Self::Error> {
         // Split the full response into double lines
 
-        let mut reader =
-            CombineLines(BufReader::new(reqwest::blocking::Response::from(value)).lines());
+        let reader = CombineLines {
+            inner: BufReader::new(reqwest::blocking::Response::from(value)).lines(),
+            func: |lines: &mut std::io::Lines<BufReader<reqwest::blocking::Response>>| {
+                let mut line_data = Vec::new();
+
+                while let Some(line) = lines.next() {
+                    match line {
+                        Ok(data) if data.is_empty() => break,
+                        Ok(data) => line_data.push(data),
+                        Err(e) => return Some(Err(e)),
+                    }
+                }
+                (!line_data.is_empty()).then(|| Ok(line_data.concat()))
+            },
+        };
 
         reader
             .map(|event| match event {
@@ -307,6 +331,7 @@ impl TryFrom<BlockingApiResponse> for Vec<codex_api_types::codex::ResponseEvent>
             })
             .map(|event_data| {
                 event_data
+                    .map(|event: response_stream::StreamEvent| event.data)
                     .and_then(response_stream::process_responses_event)
                     .and_then(|processing| {
                         processing.ok_or(response_stream::ApiError::InvalidResponseStream)
@@ -316,34 +341,15 @@ impl TryFrom<BlockingApiResponse> for Vec<codex_api_types::codex::ResponseEvent>
     }
 }
 
-struct CombineLines<I>(I);
-
-impl<I: Iterator<Item = String>> Iterator for CombineLines<I> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut lines = Vec::new();
-
-        while let Some(line) = self.0.next().filter(|s| !s.is_empty()) {
-            lines.push(line);
-        }
-        (!lines.is_empty()).then(|| lines.concat())
-    }
+struct CombineLines<I, U, F: FnMut(&mut I) -> Option<U>> {
+    inner: I,
+    func: F,
 }
 
-impl<I: Iterator<Item = Result<String, std::io::Error>>> Iterator for CombineLines<I> {
-    type Item = I::Item;
+impl<I, U, F: FnMut(&mut I) -> Option<U>> Iterator for CombineLines<I, U, F> {
+    type Item = U;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut lines = Vec::new();
-
-        while let Some(line) = self.0.next() {
-            match line {
-                Ok(data) if data.is_empty() => break,
-                Ok(data) => lines.push(data),
-                Err(e) => return Some(Err(e)),
-            }
-        }
-        (!lines.is_empty()).then(|| Ok(lines.concat()))
+        (self.func)(&mut self.inner)
     }
 }
