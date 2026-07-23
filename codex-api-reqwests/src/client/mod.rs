@@ -110,6 +110,10 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexClient<Au
             ..self
         }
     }
+
+    pub const fn headers(&self) -> &HeaderMap {
+        &self.extra_headers
+    }
 }
 
 #[cfg(feature = "middleware")]
@@ -166,6 +170,10 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, End: IntoUrl> CodexMiddlewar
             extra_headers: headers,
             ..self
         }
+    }
+
+    pub const fn headers(&self) -> &HeaderMap {
+        &self.extra_headers
     }
 }
 
@@ -298,6 +306,10 @@ pub mod blocking {
                 extra_headers: headers,
                 ..self
             }
+        }
+
+        pub const fn headers(&self) -> &HeaderMap {
+            &self.extra_headers
         }
     }
 
