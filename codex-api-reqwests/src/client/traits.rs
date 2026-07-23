@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use http::{HeaderMap, header::AUTHORIZATION};
+use http::{HeaderMap, HeaderValue, header::AUTHORIZATION};
 use uuid::Uuid;
 
 /// Describes that the object can be utilized as an authorization header for
@@ -12,6 +12,18 @@ pub trait CodexAuthorization: Display {
         format!("Bearer {self}")
     }
 
+    /// Provides a function to directly convert into a header value
+    /// 
+    /// Doesn't need to be implemented often, but is helpful when its possible
+    /// to have a more optimized approach
+    fn as_header(&self) -> Option<HeaderValue> {
+        let mut header: Option<HeaderValue> = self.authorization().parse().ok();
+        if let Some(header_data) = &mut header {
+            header_data.set_sensitive(true)
+        }
+        header
+    }
+
     /// Adds the auth token to headers
     fn add_authorization_header(&self, headers: &mut HeaderMap) {
         // Ensure that authorization begins with "bearer"
@@ -20,7 +32,7 @@ pub trait CodexAuthorization: Display {
             "The \"authorization\" function needs to include bearer at the beginning in order to satisfy API requirements"
         );
         // Adding auth string to header
-        if let Ok(auth_header) = self.authorization().parse() {
+        if let Some(auth_header) = self.as_header() {
             headers.insert(AUTHORIZATION, auth_header);
         }
     }
@@ -33,9 +45,17 @@ pub trait CodexAccountId {
     /// call
     fn account_id(&self) -> String;
 
+    /// Provides a function to directly convert into a header value
+    /// 
+    /// Doesn't need to be implemented often, but is helpful when its possible
+    /// to have a more optimized approach
+    fn as_header(&self) -> Option<HeaderValue> {
+        self.account_id().parse().ok()
+    }
+
     /// Adds the account ID to headers
     fn add_account_header(&self, headers: &mut HeaderMap) {
-        if let Ok(account_header) = self.account_id().parse() {
+        if let Some(account_header) = self.as_header() {
             headers.insert("ChatGPT-Account-ID", account_header);
         }
     }
