@@ -304,7 +304,7 @@ impl TryFrom<BlockingApiResponse> for ModelsResponse {
 
 #[cfg(feature = "async")]
 impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
-    type Error = response_stream::ApiError;
+    type Error = response_stream::ResponsesError;
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
         CombineLines {
