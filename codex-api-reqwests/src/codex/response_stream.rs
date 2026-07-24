@@ -17,27 +17,27 @@ pub(super) struct StreamEvent {
 }
 
 impl FromStr for StreamEvent {
-    type Err = ApiError;
+    type Err = ResponsesError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lines = s.lines();
         let event = lines
             .next()
             .and_then(|line| line.strip_prefix("event: "))
-            .ok_or(ApiError::InvalidResponseStream)?
+            .ok_or(ResponsesError::InvalidResponseStream)?
             .trim()
             .to_string();
         let data = lines
             .next()
             .and_then(|line| line.strip_prefix("data: "))
             .and_then(|value| serde_json::from_str(value).ok())
-            .ok_or(ApiError::InvalidResponseStream)?;
+            .ok_or(ResponsesError::InvalidResponseStream)?;
         Ok(Self { event, data })
     }
 }
 
 #[derive(Debug)]
-pub enum ApiError {
+pub enum ResponsesError {
     IO(std::io::Error),
     ReqwestError(reqwest::Error),
     InvalidResponseStream,
@@ -59,40 +59,40 @@ pub enum ApiError {
     ServerOverloaded,
 }
 
-impl From<reqwest::Error> for ApiError {
+impl From<reqwest::Error> for ResponsesError {
     fn from(value: reqwest::Error) -> Self {
         Self::ReqwestError(value)
     }
 }
 
-impl From<std::io::Error> for ApiError {
+impl From<std::io::Error> for ResponsesError {
     fn from(value: std::io::Error) -> Self {
         Self::IO(value)
     }
 }
 
-impl Display for ApiError {
+impl Display for ResponsesError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApiError::Stream(s) => write!(f, "stream error: {s}"),
-            ApiError::ContextWindowExceeded => f.write_str("context window exceeded"),
-            ApiError::QuotaExceeded => f.write_str("quota exceeded"),
-            ApiError::UsageNotIncluded => f.write_str("usage not included"),
-            ApiError::Retryable { message, delay: _ } => write!(f, "retryable error: {message}"),
-            ApiError::RateLimit(s) => write!(f, "rate limit: {s}"),
-            ApiError::InvalidRequest { message } => write!(f, "invalid request: {message}"),
-            ApiError::CyberPolicy { message } => write!(f, "cyber policy: {message}"),
-            ApiError::ServerOverloaded => f.write_str("server overloaded"),
-            ApiError::ReqwestError(error) => error.fmt(f),
-            ApiError::InvalidResponseStream => {
+            Self::Stream(s) => write!(f, "stream error: {s}"),
+            Self::ContextWindowExceeded => f.write_str("context window exceeded"),
+            Self::QuotaExceeded => f.write_str("quota exceeded"),
+            Self::UsageNotIncluded => f.write_str("usage not included"),
+            Self::Retryable { message, delay: _ } => write!(f, "retryable error: {message}"),
+            Self::RateLimit(s) => write!(f, "rate limit: {s}"),
+            Self::InvalidRequest { message } => write!(f, "invalid request: {message}"),
+            Self::CyberPolicy { message } => write!(f, "cyber policy: {message}"),
+            Self::ServerOverloaded => f.write_str("server overloaded"),
+            Self::ReqwestError(error) => error.fmt(f),
+            Self::InvalidResponseStream => {
                 f.write_str("an invalid response was given that failed to parse")
             }
-            ApiError::IO(error) => error.fmt(f),
+            Self::IO(error) => error.fmt(f),
         }
     }
 }
 
-impl std::error::Error for ApiError {
+impl std::error::Error for ResponsesError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::ReqwestError(error) => Some(error),
@@ -104,7 +104,7 @@ impl std::error::Error for ApiError {
 
 pub fn process_responses_event(
     event: ResponsesStreamEvent,
-) -> std::result::Result<Option<ResponseEvent>, ApiError> {
+) -> std::result::Result<Option<ResponseEvent>, ResponsesError> {
     match event.kind.as_str() {
         "response.output_item.done" => {
             if let Some(item_val) = event.item {
@@ -168,29 +168,29 @@ pub fn process_responses_event(
                     && let Ok(error) = serde_json::from_value::<Error>(error.clone())
                 {
                     if error.is_context_window_error() {
-                        ApiError::ContextWindowExceeded
+                        ResponsesError::ContextWindowExceeded
                     } else if error.is_quota_exceeded_error() {
-                        ApiError::QuotaExceeded
+                        ResponsesError::QuotaExceeded
                     } else if error.is_usage_not_included() {
-                        ApiError::UsageNotIncluded
+                        ResponsesError::UsageNotIncluded
                     } else if error.is_cyber_policy_error() {
                         let message = error.cyber_policy_message();
-                        ApiError::CyberPolicy { message }
+                        ResponsesError::CyberPolicy { message }
                     } else if matches!(error.code.as_deref(), Some("invalid_prompt" | "bio_policy"))
                     {
                         let message = error
                             .message
                             .unwrap_or_else(|| "Invalid request.".to_string());
-                        ApiError::InvalidRequest { message }
+                        ResponsesError::InvalidRequest { message }
                     } else if error.is_server_overloaded_error() {
-                        ApiError::ServerOverloaded
+                        ResponsesError::ServerOverloaded
                     } else {
                         let delay = try_parse_retry_after(&error);
                         let message = error.message.unwrap_or_default();
-                        ApiError::Retryable { message, delay }
+                        ResponsesError::Retryable { message, delay }
                     }
                 } else {
-                    ApiError::Stream("response.failed event received".into())
+                    ResponsesError::Stream("response.failed event received".into())
                 },
             );
         }
@@ -203,7 +203,7 @@ pub fn process_responses_event(
             });
             let reason = reason.unwrap_or("unknown");
             let message = format!("Incomplete response returned, reason: {reason}");
-            return Err(ApiError::Stream(message));
+            return Err(ResponsesError::Stream(message));
         }
         "response.completed" => {
             if let Some(resp_val) = event.response {
@@ -217,7 +217,7 @@ pub fn process_responses_event(
                     }
                     Err(err) => {
                         let error = format!("failed to parse ResponseCompleted: {err}");
-                        return Err(ApiError::Stream(error));
+                        return Err(ResponsesError::Stream(error));
                     }
                 }
             }

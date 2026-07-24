@@ -27,7 +27,7 @@ pub use codex_api_lib::codex::ResponsesOptions;
 pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
 
 pub mod analytics_events;
-mod response_stream;
+pub mod response_stream;
 
 const CODEX_VERSION: &'static str = "0.144.6";
 
@@ -328,7 +328,7 @@ impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
                 .map(|data: response_stream::StreamEvent| data.data)
                 .and_then(response_stream::process_responses_event)
                 .and_then(|processing| {
-                    processing.ok_or(response_stream::ApiError::InvalidResponseStream)
+                    processing.ok_or(response_stream::ResponsesError::InvalidResponseStream)
                 })
         })
         .collect::<Result<Vec<_>, _>>()
@@ -337,7 +337,7 @@ impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
 
 #[cfg(feature = "sync")]
 impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
-    type Error = response_stream::ApiError;
+    type Error = response_stream::ResponsesError;
 
     fn try_from(value: BlockingApiResponse) -> Result<Self, Self::Error> {
         // Split the full response into double lines
@@ -361,14 +361,14 @@ impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
         reader
             .map(|event| match event {
                 Ok(event) => event.parse(),
-                Err(err) => Err(response_stream::ApiError::IO(err)),
+                Err(err) => Err(response_stream::ResponsesError::IO(err)),
             })
             .map(|event_data| {
                 event_data
                     .map(|event: response_stream::StreamEvent| event.data)
                     .and_then(response_stream::process_responses_event)
                     .and_then(|processing| {
-                        processing.ok_or(response_stream::ApiError::InvalidResponseStream)
+                        processing.ok_or(response_stream::ResponsesError::InvalidResponseStream)
                     })
             })
             .collect::<Result<Vec<_>, _>>()
