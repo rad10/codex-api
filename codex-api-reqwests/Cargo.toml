@@ -16,6 +16,9 @@ url = { version = "^2.5", default-features = false }
 uuid = { version = "^1", default-features = false, features = ["v4"] }
 
 [features]
+default = ["std", "js"]
+std = ["codex-api-lib/std"]
+js = ["codex-api-lib/js", "uuid/js"]
 sync = ["codex-api-lib/sync", "reqwest/blocking"]
 async = ["codex-api-lib/async"]
 boxed = ["async", "codex-api-lib/boxed"]
