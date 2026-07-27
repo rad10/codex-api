@@ -1,98 +1,77 @@
-use std::borrow::Borrow;
-
-#[cfg(feature = "boxed")]
-use async_trait::async_trait;
-#[cfg(feature = "boxed")]
-use wasm_not_send_sync::WasmNotSync;
-
-use crate::ApiCommon;
-#[cfg(feature = "boxed")]
-use crate::ps::plugins::PluginsAsyncBoxed;
-#[cfg(feature = "sync")]
-use crate::ps::plugins::PluginsSync;
-#[cfg(feature = "async")]
-use crate::{AsyncTryInto, FutureNotSend, ps::plugins::PluginsAsync};
-
 pub mod plugins;
 
 // Table of endpoint constants
 pub const MODULE_PS: &str = "ps";
 pub const ENDPOINT_MCP: &str = "mcp";
 
-pub trait PsSub: Sized {
-    fn ps<'a>(&'a self) -> Ps<'a, Self> {
-        Ps { client: self }
-    }
-}
-
-/// Runs all Codex API calls
-pub struct Ps<'a, C> {
-    client: &'a C,
-}
-
-impl<'a, C> AsRef<C> for Ps<'a, C> {
-    fn as_ref(&self) -> &C {
-        &self.client
-    }
-}
-
-impl<'a, C> Borrow<C> for Ps<'a, C> {
-    fn borrow(&self) -> &C {
-        &self.client
-    }
-}
-
 #[cfg(feature = "sync")]
-pub trait PsSync: ApiCommon + PluginsSync {
-    fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>;
-}
+pub mod sync {
+    use crate::{ApiCommon, ps::plugins::sync::Plugins};
 
-#[cfg(all(feature = "sync", not(feature = "async")))]
-impl<'a, C: PsSync> Ps<'a, C> {
-    pub fn mcp(&self) -> Result<C::Response, C::ApiError>
+    pub trait Ps: ApiCommon + Plugins {
+        fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: TryInto<String>;
+    }
+
+    #[inline]
+    pub fn mcp<C: Ps>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
-        C::ps_mcp(self.borrow())
+        client.ps_mcp()
     }
 }
 
 #[cfg(feature = "async")]
-pub trait PsAsync: ApiCommon + PluginsAsync {
-    fn ps_mcp(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
-    where
-        Self::Response: AsyncTryInto<String>;
-}
+pub mod r#async {
+    use crate::{ApiCommon, AsyncTryInto, ps::plugins::r#async::Plugins};
 
-#[cfg(all(feature = "async", not(feature = "sync")))]
-impl<'a, C: PsAsync> Ps<'a, C> {
-    pub async fn mcp(&self) -> Result<C::Response, C::ApiError>
+    #[allow(async_fn_in_trait)]
+    pub trait Ps: ApiCommon + Plugins {
+        async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
+    }
+
+    #[inline]
+    pub fn mcp<'a, C: Ps>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
-        C::ps_mcp(self.borrow()).await
+        client.ps_mcp()
     }
 }
 
 #[cfg(feature = "boxed")]
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait PsAsyncBoxed: ApiCommon + PluginsAsyncBoxed {
-    async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>;
-}
+pub mod boxed {
+    use async_trait::async_trait;
+    use wasm_not_send_sync::WasmNotSync;
 
-#[cfg(feature = "boxed")]
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<C: PsAsync + WasmNotSync> PsAsyncBoxed for C {
-    async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>,
-    {
-        <C as PsAsync>::ps_mcp(&self).await
+    use crate::{ApiCommon, AsyncTryInto, ps::plugins::boxed::Plugins};
+
+    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+    pub trait Ps: ApiCommon + Plugins {
+        async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
+    }
+
+    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+    impl<C: super::r#async::Ps + WasmNotSync> Ps for C {
+        async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>,
+        {
+            super::r#async::Ps::ps_mcp(self).await
+        }
+    }
+
+    pub async fn mcp<R: AsyncTryInto<String>, E>(
+        client: &dyn Ps<Response = R, ApiError = E>,
+    ) -> Result<R, E> {
+        client.ps_mcp().await
     }
 }

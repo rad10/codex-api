@@ -12,93 +12,43 @@ pub mod wham;
 
 pub const STANDARD_ENDPOINT: &'static str = "https://chatgpt.com/backend-ui/";
 
-/// A master trait containing all modules that are available
-pub trait CodexApi:
-    accounts::AccountsSub
-    + codex::CodexSub
-    + connectors::ConnectorsSub
-    + plugins::PluginsSub
-    + ps::PsSub
-    + wham::WhamSub
-{
-}
-
 #[cfg(feature = "sync")]
-pub trait CodexApiSync:
-    accounts::AccountsSync
-    + codex::CodexSync
-    + connectors::ConnectorsSync
-    + plugins::PluginsSync
-    + ps::PsSync
-    + wham::WhamSync
-{
+pub mod sync {
+    use crate::{
+        accounts::sync::Accounts, codex::sync::Codex, connectors::sync::Connectors,
+        plugins::sync::Plugins, ps::sync::Ps, wham::sync::Wham,
+    };
+
+    /// A master trait containing all modules that are available
+    pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
+
+    impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
 }
 
 #[cfg(feature = "async")]
-pub trait CodexApiAsync:
-    accounts::AccountsAsync
-    + codex::CodexAsync
-    + connectors::ConnectorsAsync
-    + plugins::PluginsAsync
-    + ps::PsAsync
-    + wham::WhamAsync
-{
+pub mod r#async {
+    use crate::{
+        accounts::r#async::Accounts, codex::r#async::Codex, connectors::r#async::Connectors,
+        plugins::r#async::Plugins, ps::r#async::Ps, wham::r#async::Wham,
+    };
+
+    /// A master trait containing all modules that are available
+    pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
+
+    impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
 }
 
 #[cfg(feature = "boxed")]
-pub trait CodexApiBoxed:
-    accounts::AccountsAsyncBoxed
-    + codex::CodexAsyncBoxed
-    + connectors::ConnectorsAsyncBoxed
-    + plugins::PluginsAsyncBoxed
-    + ps::PsAsyncBoxed
-    + wham::WhamAsyncBoxed
-{
-}
+pub mod boxed {
+    use crate::{
+        accounts::boxed::Accounts, codex::boxed::Codex, connectors::boxed::Connectors,
+        plugins::boxed::Plugins, ps::boxed::Ps, wham::boxed::Wham,
+    };
 
-// blanket implement of api trait on all models that implement all traits
-impl<
-    T: accounts::AccountsSub
-        + codex::CodexSub
-        + connectors::ConnectorsSub
-        + plugins::PluginsSub
-        + ps::PsSub
-        + wham::WhamSub,
-> CodexApi for T
-{
-}
-#[cfg(feature = "sync")]
-impl<
-    T: accounts::AccountsSync
-        + codex::CodexSync
-        + connectors::ConnectorsSync
-        + plugins::PluginsSync
-        + ps::PsSync
-        + wham::WhamSync,
-> CodexApiSync for T
-{
-}
-#[cfg(feature = "async")]
-impl<
-    T: accounts::AccountsAsync
-        + codex::CodexAsync
-        + connectors::ConnectorsAsync
-        + plugins::PluginsAsync
-        + ps::PsAsync
-        + wham::WhamAsync,
-> CodexApiAsync for T
-{
-}
-#[cfg(feature = "boxed")]
-impl<
-    T: accounts::AccountsAsyncBoxed
-        + codex::CodexAsyncBoxed
-        + connectors::ConnectorsAsyncBoxed
-        + plugins::PluginsAsyncBoxed
-        + ps::PsAsyncBoxed
-        + wham::WhamAsyncBoxed,
-> CodexApiBoxed for T
-{
+    /// A master trait containing all modules that are available
+    pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
+
+    impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
 }
 
 #[cfg(feature = "async")]

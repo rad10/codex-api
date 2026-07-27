@@ -1,18 +1,3 @@
-use std::borrow::Borrow;
-
-#[cfg(feature = "boxed")]
-use async_trait::async_trait;
-#[cfg(feature = "boxed")]
-use wasm_not_send_sync::WasmNotSync;
-
-use crate::ApiCommon;
-#[cfg(feature = "boxed")]
-use crate::wham::profiles::ProfilesAsyncBoxed;
-#[cfg(feature = "sync")]
-use crate::wham::profiles::ProfilesSync;
-#[cfg(feature = "async")]
-use crate::{AsyncTryInto, FutureNotSend, wham::profiles::ProfilesAsync};
-
 pub mod profiles;
 
 // Table of endpoint constants
@@ -20,115 +5,117 @@ pub const MODULE_WHAM: &str = "wham";
 pub const ENDPOINT_RATE_LIMIT_RESET_CREDITS: &str = "rate-limit-reset-credits";
 pub const ENDPOINT_USAGE: &str = "usage";
 
-pub trait WhamSub: Sized {
-    fn ps<'a>(&'a self) -> Wham<'a, Self> {
-        Wham { client: self }
-    }
-}
-
-/// Runs all Codex API calls
-pub struct Wham<'a, C> {
-    client: &'a C,
-}
-
-impl<'a, C> AsRef<C> for Wham<'a, C> {
-    fn as_ref(&self) -> &C {
-        &self.client
-    }
-}
-
-impl<'a, C> Borrow<C> for Wham<'a, C> {
-    fn borrow(&self) -> &C {
-        &self.client
-    }
-}
-
 #[cfg(feature = "sync")]
-pub trait WhamSync: ApiCommon + ProfilesSync {
-    fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>;
+pub mod sync {
+    use crate::{ApiCommon, wham::profiles::sync::Profiles};
 
-    fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>;
-}
+    pub trait Wham: ApiCommon + Profiles {
+        fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: TryInto<String>;
 
-#[cfg(all(feature = "sync", not(feature = "async")))]
-impl<'a, C: WhamSync> Wham<'a, C> {
-    pub fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
-    where
-        C::Response: TryInto<String>,
-    {
-        C::wham_rate_limit_reset_credits(self.borrow())
+        fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: TryInto<String>;
     }
 
-    pub fn usage(&self) -> Result<C::Response, C::ApiError>
+    #[inline]
+    pub fn rate_limit_reset_credits<C: Wham>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
-        C::wham_usage(self.borrow())
+        client.wham_rate_limit_reset_credits()
+    }
+
+    #[inline]
+    pub fn usage<C: Wham>(client: &C) -> Result<C::Response, C::ApiError>
+    where
+        C::Response: TryInto<String>,
+    {
+        client.wham_usage()
     }
 }
 
 #[cfg(feature = "async")]
-pub trait WhamAsync: ApiCommon + ProfilesAsync {
-    fn wham_rate_limit_reset_credits(
-        &self,
-    ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
-    where
-        Self::Response: AsyncTryInto<String>;
+pub mod r#async {
+    use crate::{ApiCommon, AsyncTryInto, wham::profiles::r#async::Profiles};
 
-    fn wham_usage(&self) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
-    where
-        Self::Response: AsyncTryInto<String>;
-}
+    #[allow(async_fn_in_trait)]
+    pub trait Wham: ApiCommon + Profiles {
+        async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
 
-#[cfg(all(feature = "async", not(feature = "sync")))]
-impl<'a, C: WhamAsync> Wham<'a, C> {
-    pub async fn rate_limit_reset_credits(&self) -> Result<C::Response, C::ApiError>
-    where
-        C::Response: AsyncTryInto<String>,
-    {
-        C::wham_rate_limit_reset_credits(self.borrow()).await
+        async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
     }
 
-    pub async fn usage(&self) -> Result<C::Response, C::ApiError>
+    #[inline]
+    pub fn rate_limit_reset_credits<C: Wham>(
+        client: &C,
+    ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
-        C::wham_usage(self.borrow()).await
+        client.wham_rate_limit_reset_credits()
+    }
+
+    #[inline]
+    pub fn usage<C: Wham>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    where
+        C::Response: AsyncTryInto<String>,
+    {
+        client.wham_usage()
     }
 }
 
 #[cfg(feature = "boxed")]
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-pub trait WhamAsyncBoxed: ApiCommon + ProfilesAsyncBoxed {
-    async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>;
+pub mod boxed {
+    use async_trait::async_trait;
+    use wasm_not_send_sync::WasmNotSync;
 
-    async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>;
-}
+    use crate::{ApiCommon, AsyncTryInto, wham::profiles::boxed::Profiles};
 
-#[cfg(feature = "boxed")]
-#[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
-#[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-impl<C: WhamAsync + WasmNotSync> WhamAsyncBoxed for C {
-    async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>,
-    {
-        <C as WhamAsync>::wham_rate_limit_reset_credits(&self).await
+    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+    pub trait Wham: ApiCommon + Profiles {
+        async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
+
+        async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>;
     }
 
-    async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: AsyncTryInto<String>,
-    {
-        <C as WhamAsync>::wham_usage(&self).await
+    #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
+    #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
+    impl<C: super::r#async::Wham + WasmNotSync> Wham for C {
+        async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>,
+        {
+            super::r#async::Wham::wham_rate_limit_reset_credits(self).await
+        }
+
+        async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: AsyncTryInto<String>,
+        {
+            super::r#async::Wham::wham_usage(self).await
+        }
+    }
+
+    pub async fn rate_limit_reset_credits<R: AsyncTryInto<String>, E>(
+        client: &dyn Wham<Response = R, ApiError = E>,
+    ) -> Result<R, E> {
+        client.wham_rate_limit_reset_credits().await
+    }
+
+    pub async fn usage<R: AsyncTryInto<String>, E>(
+        client: &dyn Wham<Response = R, ApiError = E>,
+    ) -> Result<R, E> {
+        client.wham_usage().await
     }
 }
