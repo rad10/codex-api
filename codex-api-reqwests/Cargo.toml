@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 codex-api-lib = { version = "^0.1", path = "../codex-api-lib", default-features = false }
 codex-api-types = { version = "^0.1", path = "../codex-api-types", default-features = false, features = ["serde"] }
+futures = { version = "0.3.33", optional = true, default-features = false }
 http = { version = "^1", default-features = false }
 regex-lite = { version = "^0.1", default-features = false, features = ["std", "string"] }
 reqwest = { version = "^0.13", default-features = false, features = ["json", "query"] }
@@ -17,8 +18,9 @@ uuid = { version = "^1", default-features = false, features = ["v4"] }
 
 [features]
 default = ["std", "js"]
-std = ["codex-api-lib/std"]
+std = ["codex-api-lib/std", "futures?/std"]
 js = ["codex-api-lib/js", "uuid/js"]
+stream = ["reqwest/stream", "dep:futures"]
 sync = ["codex-api-lib/sync", "reqwest/blocking"]
 async = ["codex-api-lib/async"]
 boxed = ["async", "codex-api-lib/boxed"]
@@ -26,3 +28,4 @@ boxed = ["async", "codex-api-lib/boxed"]
 native-tls = ["reqwest/native-tls"]
 rustls-tls = ["reqwest/rustls", "reqwest-middleware?/rustls"]
 middleware = ["dep:reqwest-middleware"]
+futures = ["dep:futures"]
