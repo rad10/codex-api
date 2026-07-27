@@ -1,10 +1,8 @@
 use std::io::{BufRead, BufReader};
 
-#[cfg(feature = "sync")]
-use codex_api_lib::codex::CodexSync;
-use codex_api_lib::codex::{CodexSub, ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX};
+use codex_api_lib::codex::{self, ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX};
 #[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryFrom, AsyncTryInto, codex::CodexAsync};
+use codex_api_lib::{AsyncTryFrom, AsyncTryInto};
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 use http::{HeaderValue, StatusCode};
 use reqwest::IntoUrl;
@@ -31,24 +29,9 @@ pub mod response_stream;
 
 const CODEX_VERSION: &'static str = "0.144.6";
 
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> CodexSub
-    for CodexClient<Auth, Acc, U>
-{
-}
-#[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> CodexSub
-    for CodexMiddleware<Auth, Acc, U>
-{
-}
-#[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> CodexSub
-    for blocking::CodexClient<Auth, Acc, U>
-{
-}
-
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
-    CodexAsync for CodexClient<Auth, Acc, U>
+    codex::r#async::Codex for CodexClient<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -128,7 +111,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 
 #[cfg(all(feature = "async", feature = "middleware"))]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
-    CodexAsync for CodexMiddleware<Auth, Acc, U>
+    codex::r#async::Codex for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -208,7 +191,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + C
 
 #[cfg(feature = "sync")]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
-    CodexSync for blocking::CodexClient<Auth, Acc, U>
+    codex::sync::Codex for blocking::CodexClient<Auth, Acc, U>
 {
     fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
     where

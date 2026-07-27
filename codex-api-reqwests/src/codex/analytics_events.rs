@@ -1,7 +1,6 @@
-#[cfg(feature = "sync")]
-use codex_api_lib::codex::analytics_events::AnalyticsEventsSync;
 #[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryInto, codex::analytics_events::AnalyticsEventsAsync};
+use codex_api_lib::AsyncTryInto;
+use codex_api_lib::codex::analytics_events;
 use reqwest::IntoUrl;
 
 #[cfg(feature = "async")]
@@ -14,7 +13,7 @@ use crate::client::traits::{CodexAccountId, CodexAuthorization};
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-    AnalyticsEventsAsync for CodexClient<Auth, Acc, U>
+    analytics_events::r#async::AnalyticsEvents for CodexClient<Auth, Acc, U>
 {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -26,7 +25,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 
 #[cfg(all(feature = "async", feature = "middleware"))]
 impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-    AnalyticsEventsAsync for CodexMiddleware<Auth, Acc, U>
+    analytics_events::r#async::AnalyticsEvents for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -37,8 +36,8 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEventsSync
-    for blocking::CodexClient<Auth, Acc, U>
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl>
+    analytics_events::sync::AnalyticsEvents for blocking::CodexClient<Auth, Acc, U>
 {
     fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
     where

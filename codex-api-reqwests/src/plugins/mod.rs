@@ -1,8 +1,6 @@
-use codex_api_lib::plugins::PluginsSub;
-#[cfg(feature = "sync")]
-use codex_api_lib::plugins::PluginsSync;
 #[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryInto, plugins::PluginsAsync};
+use codex_api_lib::AsyncTryInto;
+use codex_api_lib::plugins;
 use reqwest::IntoUrl;
 
 #[cfg(all(feature = "async", feature = "middleware"))]
@@ -14,24 +12,9 @@ use crate::client::{
     traits::{CodexAccountId, CodexAuthorization},
 };
 
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub
-    for CodexClient<Auth, Acc, U>
-{
-}
-#[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub
-    for CodexMiddleware<Auth, Acc, U>
-{
-}
-#[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSub
-    for blocking::CodexClient<Auth, Acc, U>
-{
-}
-
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync
-    for CodexClient<Auth, Acc, U>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+    plugins::r#async::Plugins for CodexClient<Auth, Acc, U>
 {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -42,8 +25,8 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PluginsAsync
-    for CodexMiddleware<Auth, Acc, U>
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+    plugins::r#async::Plugins for CodexMiddleware<Auth, Acc, U>
 {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -54,7 +37,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PluginsSync
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> plugins::sync::Plugins
     for blocking::CodexClient<Auth, Acc, U>
 {
     fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>

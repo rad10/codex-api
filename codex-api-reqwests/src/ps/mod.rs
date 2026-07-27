@@ -1,8 +1,6 @@
-use codex_api_lib::ps::PsSub;
-#[cfg(feature = "sync")]
-use codex_api_lib::ps::PsSync;
 #[cfg(feature = "async")]
-use codex_api_lib::{AsyncTryInto, ps::PsAsync};
+use codex_api_lib::AsyncTryInto;
+use codex_api_lib::ps;
 use reqwest::IntoUrl;
 
 #[cfg(all(feature = "async", feature = "middleware"))]
@@ -16,23 +14,8 @@ use crate::client::{
 
 pub mod plugins;
 
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
-    for CodexClient<Auth, Acc, U>
-{
-}
-#[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
-    for CodexMiddleware<Auth, Acc, U>
-{
-}
-#[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSub
-    for blocking::CodexClient<Auth, Acc, U>
-{
-}
-
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ps::r#async::Ps
     for CodexClient<Auth, Acc, U>
 {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
@@ -44,7 +27,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> PsAsync
+impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> ps::r#async::Ps
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
@@ -56,7 +39,7 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
 }
 
 #[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> PsSync
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> ps::sync::Ps
     for blocking::CodexClient<Auth, Acc, U>
 {
     fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
