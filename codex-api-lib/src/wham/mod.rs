@@ -68,6 +68,131 @@ pub mod r#async {
     {
         client.wham_usage()
     }
+
+    #[cfg(feature = "threaded")]
+    pub mod thread_safe {
+        use crate::wham::profiles::r#async::thread_safe::Profiles;
+
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Wham: ApiCommon + Profiles {
+            fn wham_rate_limit_reset_credits(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn wham_usage(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn rate_limit_reset_credits<C: Wham>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.wham_rate_limit_reset_credits()
+        }
+
+        #[inline]
+        pub fn usage<C: Wham>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.wham_usage()
+        }
+    }
+
+    #[cfg(feature = "threaded")]
+    pub mod wasm_safe {
+        use crate::{FutureNotSend, wham::profiles::r#async::wasm_safe::Profiles};
+
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Wham: ApiCommon + Profiles {
+            fn wham_rate_limit_reset_credits(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn wham_usage(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn rate_limit_reset_credits<C: Wham>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.wham_rate_limit_reset_credits()
+        }
+
+        #[inline]
+        pub fn usage<C: Wham>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.wham_usage()
+        }
+
+        // Blanket implementation based on arch
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<T: super::thread_safe::Wham> Wham for T {
+            fn wham_rate_limit_reset_credits(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Wham::wham_rate_limit_reset_credits(self)
+            }
+
+            fn wham_usage(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Wham::wham_usage(self)
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        impl<T: super::Wham> Wham for T {
+            fn wham_rate_limit_reset_credits(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Wham::wham_rate_limit_reset_credits(self)
+            }
+
+            fn wham_usage(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Wham::wham_usage(self)
+            }
+        }
+    }
 }
 
 #[cfg(feature = "boxed")]
@@ -91,19 +216,19 @@ pub mod boxed {
 
     #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
     #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-    impl<C: super::r#async::Wham + WasmNotSync> Wham for C {
+    impl<C: super::r#async::wasm_safe::Wham + WasmNotSync> Wham for C {
         async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Wham::wham_rate_limit_reset_credits(self).await
+            super::r#async::wasm_safe::Wham::wham_rate_limit_reset_credits(self).await
         }
 
         async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Wham::wham_usage(self).await
+            super::r#async::wasm_safe::Wham::wham_usage(self).await
         }
     }
 

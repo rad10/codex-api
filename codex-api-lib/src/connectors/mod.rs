@@ -19,6 +19,24 @@ pub mod r#async {
     pub trait Connectors: ApiCommon + Directory {}
 
     impl<T: ApiCommon + Directory> Connectors for T {}
+
+    pub mod thread_safe {
+        use crate::connectors::directory::r#async::thread_safe::Directory;
+
+        use super::ApiCommon;
+        pub trait Connectors: ApiCommon + Directory {}
+
+        impl<T: ApiCommon + Directory> Connectors for T {}
+    }
+
+    pub mod wasm_safe {
+        use crate::connectors::directory::r#async::wasm_safe::Directory;
+
+        use super::ApiCommon;
+        pub trait Connectors: ApiCommon + Directory {}
+
+        impl<T: ApiCommon + Directory> Connectors for T {}
+    }
 }
 
 #[cfg(feature = "boxed")]

@@ -43,6 +43,81 @@ pub mod r#async {
     {
         client.plugins_featured()
     }
+
+    #[cfg(feature = "threaded")]
+    pub mod thread_safe {
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Plugins: ApiCommon {
+            /// Gets the settings for the given user's account
+            fn plugins_featured(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn featured<C: Plugins>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.plugins_featured()
+        }
+    }
+
+    #[cfg(feature = "threaded")]
+    pub mod wasm_safe {
+        use crate::FutureNotSend;
+
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Plugins: ApiCommon {
+            /// Gets the settings for the given user's account
+            fn plugins_featured(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn featured<C: Plugins>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.plugins_featured()
+        }
+
+        // Blanket implementation based on arch
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<T: super::thread_safe::Plugins> Plugins for T {
+            fn plugins_featured(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Plugins::plugins_featured(self)
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        impl<T: super::Plugins> Plugins for T {
+            fn plugins_featured(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Plugins::plugins_featured(self)
+            }
+        }
+    }
 }
 
 #[cfg(feature = "boxed")]
@@ -63,12 +138,12 @@ pub mod boxed {
 
     #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
     #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-    impl<C: super::r#async::Plugins + WasmNotSync> Plugins for C {
+    impl<C: super::r#async::wasm_safe::Plugins + WasmNotSync> Plugins for C {
         async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Plugins::plugins_featured(self).await
+            super::r#async::wasm_safe::Plugins::plugins_featured(self).await
         }
     }
 

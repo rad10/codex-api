@@ -92,6 +92,179 @@ pub mod r#async {
     {
         client.ps_plugins_suggested()
     }
+
+    #[cfg(feature = "threaded")]
+    pub mod thread_safe {
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Plugins: ApiCommon {
+            fn ps_plugins_installed(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn ps_plugins_list(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn ps_plugins_suggested(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn installed<C: Plugins>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_installed()
+        }
+
+        #[inline]
+        pub fn list<C: Plugins>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_list()
+        }
+
+        #[inline]
+        pub fn suggested<C: Plugins>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_suggested()
+        }
+    }
+
+    #[cfg(feature = "threaded")]
+    pub mod wasm_safe {
+        use crate::FutureNotSend;
+
+        use super::{ApiCommon, AsyncTryInto};
+
+        pub trait Plugins: ApiCommon {
+            fn ps_plugins_installed(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn ps_plugins_list(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+
+            fn ps_plugins_suggested(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>;
+        }
+
+        #[inline]
+        pub fn installed<C: Plugins>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_installed()
+        }
+
+        #[inline]
+        pub fn list<C: Plugins>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_list()
+        }
+
+        #[inline]
+        pub fn suggested<C: Plugins>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
+        where
+            C::Response: AsyncTryInto<String>,
+        {
+            client.ps_plugins_suggested()
+        }
+
+        // Blanket implementation based on arch
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<T: super::thread_safe::Plugins> Plugins for T {
+            fn ps_plugins_installed(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Plugins::ps_plugins_installed(self)
+            }
+
+            fn ps_plugins_list(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Plugins::ps_plugins_list(self)
+            }
+
+            fn ps_plugins_suggested(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::thread_safe::Plugins::ps_plugins_suggested(self)
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        impl<T: super::Plugins> Plugins for T {
+            fn ps_plugins_installed(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Plugins::ps_plugins_installed(self)
+            }
+
+            fn ps_plugins_list(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Plugins::ps_plugins_list(self)
+            }
+
+            fn ps_plugins_suggested(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<String>,
+            {
+                super::Plugins::ps_plugins_suggested(self)
+            }
+        }
+    }
 }
 
 #[cfg(feature = "boxed")]
@@ -119,26 +292,26 @@ pub mod boxed {
 
     #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
     #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-    impl<C: super::r#async::Plugins + WasmNotSync> Plugins for C {
+    impl<C: super::r#async::wasm_safe::Plugins + WasmNotSync> Plugins for C {
         async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Plugins::ps_plugins_installed(self).await
+            super::r#async::wasm_safe::Plugins::ps_plugins_installed(self).await
         }
 
         async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Plugins::ps_plugins_list(self).await
+            super::r#async::wasm_safe::Plugins::ps_plugins_list(self).await
         }
 
         async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<String>,
         {
-            super::r#async::Plugins::ps_plugins_suggested(self).await
+            super::r#async::wasm_safe::Plugins::ps_plugins_suggested(self).await
         }
     }
 

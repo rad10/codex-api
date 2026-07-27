@@ -36,6 +36,34 @@ pub mod r#async {
     pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
 
     impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
+
+    #[cfg(feature = "threaded")]
+    pub mod thread_safe {
+        use crate::{
+            accounts::r#async::thread_safe::Accounts, codex::r#async::thread_safe::Codex,
+            connectors::r#async::thread_safe::Connectors, plugins::r#async::thread_safe::Plugins,
+            ps::r#async::thread_safe::Ps, wham::r#async::thread_safe::Wham,
+        };
+
+        /// A master trait containing all modules that are available
+        pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
+
+        impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
+    }
+
+    #[cfg(feature = "threaded")]
+    pub mod wasm_safe {
+        use crate::{
+            accounts::r#async::wasm_safe::Accounts, codex::r#async::wasm_safe::Codex,
+            connectors::r#async::wasm_safe::Connectors, plugins::r#async::wasm_safe::Plugins,
+            ps::r#async::wasm_safe::Ps, wham::r#async::wasm_safe::Wham,
+        };
+
+        /// A master trait containing all modules that are available
+        pub trait CodexApi: Accounts + Codex + Connectors + Plugins + Ps + Wham {}
+
+        impl<T: Accounts + Codex + Connectors + Plugins + Ps + Wham> CodexApi for T {}
+    }
 }
 
 #[cfg(feature = "boxed")]

@@ -36,7 +36,10 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn models<C: Codex>(client: &C) -> Result<C::Response, C::ApiError> where C::Response: TryInto<ModelsResponse> {
+    pub fn models<C: Codex>(client: &C) -> Result<C::Response, C::ApiError>
+    where
+        C::Response: TryInto<ModelsResponse>,
+    {
         client.codex_models()
     }
 
@@ -45,7 +48,10 @@ pub mod sync {
         client: &C,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
-    ) -> Result<C::Response, C::ApiError> where C::Response: TryInto<Vec<ResponseEvent>> {
+    ) -> Result<C::Response, C::ApiError>
+    where
+        C::Response: TryInto<Vec<ResponseEvent>>,
+    {
         client.codex_responses(request, options)
     }
 }
@@ -95,6 +101,153 @@ pub mod r#async {
     {
         client.codex_responses(request, options)
     }
+
+    #[cfg(feature = "threaded")]
+    pub mod thread_safe {
+        use crate::codex::analytics_events::r#async::thread_safe::AnalyticsEvents;
+
+        use super::{
+            ApiCommon, AsyncTryInto, ModelsResponse, ResponseEvent, ResponsesApiRequest,
+            ResponsesOptions,
+        };
+
+        pub trait Codex: ApiCommon + AnalyticsEvents {
+            /// Collects models from Codex's library
+            fn codex_models(
+                &self,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<ModelsResponse>;
+
+            /// Collects a response from ChatGPT's API
+            fn codex_responses(
+                &self,
+                request: ResponsesApiRequest,
+                options: ResponsesOptions,
+            ) -> impl Future<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<Vec<ResponseEvent>>;
+        }
+
+        #[inline]
+        pub fn models<C: Codex>(
+            client: &C,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<ModelsResponse>,
+        {
+            client.codex_models()
+        }
+
+        #[inline]
+        pub fn responses<C: Codex>(
+            client: &C,
+            request: ResponsesApiRequest,
+            options: ResponsesOptions,
+        ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<Vec<ResponseEvent>>,
+        {
+            client.codex_responses(request, options)
+        }
+    }
+
+    #[cfg(feature = "threaded")]
+    pub mod wasm_safe {
+        use crate::{FutureNotSend, codex::analytics_events::r#async::wasm_safe::AnalyticsEvents};
+
+        use super::{
+            ApiCommon, AsyncTryInto, ModelsResponse, ResponseEvent, ResponsesApiRequest,
+            ResponsesOptions,
+        };
+
+        pub trait Codex: ApiCommon + AnalyticsEvents {
+            /// Collects models from Codex's library
+            fn codex_models(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<ModelsResponse>;
+
+            /// Collects a response from ChatGPT's API
+            fn codex_responses(
+                &self,
+                request: ResponsesApiRequest,
+                options: ResponsesOptions,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>> + Send
+            where
+                Self::Response: AsyncTryInto<Vec<ResponseEvent>>;
+        }
+
+        #[inline]
+        pub fn models<C: Codex>(
+            client: &C,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<ModelsResponse>,
+        {
+            client.codex_models()
+        }
+
+        #[inline]
+        pub fn responses<C: Codex>(
+            client: &C,
+            request: ResponsesApiRequest,
+            options: ResponsesOptions,
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>> + Send
+        where
+            C::Response: AsyncTryInto<Vec<ResponseEvent>>,
+        {
+            client.codex_responses(request, options)
+        }
+
+        // Blanket implementation based on arch
+        #[cfg(not(target_arch = "wasm32"))]
+        impl<T: super::thread_safe::Codex> Codex for T {
+            fn codex_models(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<ModelsResponse>,
+            {
+                super::thread_safe::Codex::codex_models(self)
+            }
+
+            fn codex_responses(
+                &self,
+                request: ResponsesApiRequest,
+                options: ResponsesOptions,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
+            {
+                super::thread_safe::Codex::codex_responses(self, request, options)
+            }
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        impl<T: super::Codex> Codex for T {
+            fn codex_models(
+                &self,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<ModelsResponse>,
+            {
+                super::Codex::codex_models(self)
+            }
+
+            fn codex_responses(
+                &self,
+                request: ResponsesApiRequest,
+                options: ResponsesOptions,
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
+            where
+                Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
+            {
+                super::Codex::codex_responses(self, request, options)
+            }
+        }
+    }
 }
 
 #[cfg(feature = "boxed")]
@@ -128,12 +281,12 @@ pub mod boxed {
 
     #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
     #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
-    impl<C: super::r#async::Codex + WasmNotSync> Codex for C {
+    impl<C: super::r#async::wasm_safe::Codex + WasmNotSync> Codex for C {
         async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
         where
             Self::Response: AsyncTryInto<ModelsResponse>,
         {
-            super::r#async::Codex::codex_models(self).await
+            super::r#async::wasm_safe::Codex::codex_models(self).await
         }
 
         async fn codex_responses(
@@ -144,7 +297,7 @@ pub mod boxed {
         where
             Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
         {
-            super::r#async::Codex::codex_responses(self, request, options).await
+            super::r#async::wasm_safe::Codex::codex_responses(self, request, options).await
         }
     }
 
