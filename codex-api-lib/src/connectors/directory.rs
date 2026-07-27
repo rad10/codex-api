@@ -51,7 +51,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn list<'a, C: Directory>(
+    pub fn list<C: Directory>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -61,7 +61,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn list_workspace<'a, C: Directory>(
+    pub fn list_workspace<C: Directory>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where

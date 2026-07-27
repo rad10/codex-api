@@ -32,7 +32,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn events<'a, C: AnalyticsEvents>(
+    pub fn events<C: AnalyticsEvents>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where

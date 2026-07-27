@@ -35,7 +35,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn featured<'a, C: Plugins>(
+    pub fn featured<C: Plugins>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where

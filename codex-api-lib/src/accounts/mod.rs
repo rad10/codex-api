@@ -16,7 +16,10 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn settings<C: Accounts>(client: &C, user_id: Uuid) -> Result<C::Response, C::ApiError> {
+    pub fn settings<C: Accounts>(client: &C, user_id: Uuid) -> Result<C::Response, C::ApiError>
+    where
+        C::Response: TryInto<String>,
+    {
         client.account_settings(user_id)
     }
 }
@@ -36,7 +39,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn settings<'a, C: Accounts>(
+    pub fn settings<C: Accounts>(
         client: &C,
         user_id: Uuid,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>

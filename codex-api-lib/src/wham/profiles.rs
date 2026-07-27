@@ -32,7 +32,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn me<'a, C: Profiles>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn me<C: Profiles>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {

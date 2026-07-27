@@ -35,7 +35,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn mcp<'a, C: Ps>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn mcp<C: Ps>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
