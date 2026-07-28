@@ -14,10 +14,10 @@ use crate::client::{
 };
 
 #[cfg(feature = "async")]
-pub use r#async::{list, list_workspace};
+pub use r#async::{Directory, list, list_workspace};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Directory
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Directory
     for CodexClient<Auth, Acc, U>
 {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
@@ -36,7 +36,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Directo
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Directory
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Directory
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
@@ -60,10 +60,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
-    pub use r#async::thread_safe::{list, list_workspace};
+    pub use r#async::thread_safe::{Directory, list, list_workspace};
 
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Directory for CodexClient<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Directory
+        for CodexClient<Auth, Acc, U>
     {
         async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -83,8 +83,8 @@ pub mod thread_safe {
     }
 
     #[cfg(feature = "middleware")]
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Directory for CodexMiddleware<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Directory
+        for CodexMiddleware<Auth, Acc, U>
     {
         async fn connectors_directory_list(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -108,5 +108,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::{list, list_workspace};
+    pub use r#async::wasm_safe::{Directory, list, list_workspace};
 }

@@ -14,10 +14,10 @@ use crate::client::{
 };
 
 #[cfg(feature = "async")]
-pub use r#async::featured;
+pub use r#async::{Plugins, featured};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Plugins
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Plugins
     for CodexClient<Auth, Acc, U>
 {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
@@ -29,7 +29,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Plugins
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Plugins
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Plugins
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
@@ -46,10 +46,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
-    pub use r#async::thread_safe::featured;
+    pub use r#async::thread_safe::{Plugins, featured};
 
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Plugins for CodexClient<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Plugins
+        for CodexClient<Auth, Acc, U>
     {
         async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -60,8 +60,8 @@ pub mod thread_safe {
     }
 
     #[cfg(feature = "middleware")]
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Plugins for CodexMiddleware<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Plugins
+        for CodexMiddleware<Auth, Acc, U>
     {
         async fn plugins_featured(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -76,5 +76,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::featured;
+    pub use r#async::wasm_safe::{Plugins, featured};
 }

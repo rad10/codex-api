@@ -1,5 +1,4 @@
-use codex_api_lib::connectors::directory::sync::Directory;
-pub use codex_api_lib::connectors::directory::sync::{list, list_workspace};
+pub use codex_api_lib::connectors::directory::sync::{Directory, list, list_workspace};
 use reqwest::IntoUrl;
 
 use crate::client::{

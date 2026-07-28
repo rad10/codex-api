@@ -1,5 +1,4 @@
-use codex_api_lib::wham::profiles::sync::Profiles;
-pub use codex_api_lib::wham::profiles::sync::me;
+pub use codex_api_lib::wham::profiles::sync::{Profiles, me};
 use reqwest::IntoUrl;
 
 use crate::client::{

@@ -1,7 +1,6 @@
-use codex_api_lib::ps::plugins::sync::Plugins;
 use reqwest::IntoUrl;
 
-pub use codex_api_lib::ps::plugins::sync::{installed, list, suggested};
+pub use codex_api_lib::ps::plugins::sync::{Plugins, installed, list, suggested};
 
 use crate::client::{
     blocking::CodexClient,

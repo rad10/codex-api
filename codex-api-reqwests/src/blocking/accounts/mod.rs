@@ -1,4 +1,3 @@
-use codex_api_lib::accounts::sync::Accounts;
 use reqwest::IntoUrl;
 use uuid::Uuid;
 
@@ -7,7 +6,7 @@ use crate::client::{
     traits::{CodexAccountId, CodexAuthorization},
 };
 
-pub use codex_api_lib::accounts::sync::settings;
+pub use codex_api_lib::accounts::sync::{Accounts, settings};
 
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Accounts
     for CodexClient<Auth, Acc, U>

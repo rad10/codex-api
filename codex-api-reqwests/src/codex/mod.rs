@@ -29,7 +29,7 @@ use crate::{
 #[cfg(feature = "async")]
 pub use codex_api_lib::codex::{
     ResponsesOptions,
-    r#async::{models, responses},
+    r#async::{Codex, models, responses},
 };
 #[cfg(feature = "async")]
 pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
@@ -101,7 +101,7 @@ fn responses_params<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + 
 }
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> r#async::Codex
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
     for CodexClient<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
@@ -205,7 +205,7 @@ fn responses_params_middleware<
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> r#async::Codex
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
@@ -325,11 +325,11 @@ pub mod thread_safe {
     #[cfg(feature = "middleware")]
     use super::{CodexMiddleware, models_params_middleware, responses_params_middleware};
 
-    pub use r#async::thread_safe::{models, responses};
+    pub use r#async::thread_safe::{Codex, models, responses};
     use async_from::thread_safe::AsyncTryFromThreadSafe;
 
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
-        r#async::thread_safe::Codex for CodexClient<Auth, Acc, U>
+        Codex for CodexClient<Auth, Acc, U>
     {
         async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -368,7 +368,7 @@ pub mod thread_safe {
 
     #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Clone + Sync>
-        r#async::thread_safe::Codex for CodexMiddleware<Auth, Acc, U>
+        Codex for CodexMiddleware<Auth, Acc, U>
     {
         async fn codex_models(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -424,5 +424,5 @@ pub mod thread_safe {
 
 #[cfg(feature = "threaded")]
 pub mod wasm_safe {
-    pub use super::r#async::wasm_safe::{models, responses};
+    pub use super::r#async::wasm_safe::{Codex, models, responses};
 }

@@ -1,9 +1,10 @@
-use std::{io::{BufRead, BufReader}, iter};
-
-pub use codex_api_lib::codex::sync::{models, responses};
-use codex_api_lib::codex::{
-    ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX, ResponsesOptions, sync::Codex,
+use std::{
+    io::{BufRead, BufReader},
+    iter,
 };
+
+pub use codex_api_lib::codex::sync::{Codex, models, responses};
+use codex_api_lib::codex::{ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX, ResponsesOptions};
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 use http::{HeaderValue, StatusCode};
 use reqwest::IntoUrl;
@@ -116,14 +117,14 @@ impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
         let reader = iter::from_fn(|| {
             let mut line_data = Vec::new();
 
-                while let Some(line) = response_lines.next() {
-                    match line {
-                        Ok(data) if data.is_empty() => break,
-                        Ok(data) => line_data.push(data),
-                        Err(e) => return Some(Err(e)),
-                    }
+            while let Some(line) = response_lines.next() {
+                match line {
+                    Ok(data) if data.is_empty() => break,
+                    Ok(data) => line_data.push(data),
+                    Err(e) => return Some(Err(e)),
                 }
-                (!line_data.is_empty()).then(|| Ok(line_data.concat()))
+            }
+            (!line_data.is_empty()).then(|| Ok(line_data.concat()))
         });
 
         reader

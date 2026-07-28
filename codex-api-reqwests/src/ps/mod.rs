@@ -17,12 +17,10 @@ use crate::client::{
 pub mod plugins;
 
 #[cfg(feature = "async")]
-pub use r#async::mcp;
+pub use r#async::{Ps, mcp};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Ps
-    for CodexClient<Auth, Acc, U>
-{
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Ps for CodexClient<Auth, Acc, U> {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: AsyncTryInto<String>,
@@ -32,7 +30,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Ps
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Ps
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Ps
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
@@ -49,10 +47,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
-    pub use r#async::thread_safe::mcp;
+    pub use r#async::thread_safe::{Ps, mcp};
 
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Ps for CodexClient<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Ps
+        for CodexClient<Auth, Acc, U>
     {
         async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -63,8 +61,8 @@ pub mod thread_safe {
     }
 
     #[cfg(feature = "middleware")]
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Ps for CodexMiddleware<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Ps
+        for CodexMiddleware<Auth, Acc, U>
     {
         async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -79,5 +77,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::mcp;
+    pub use r#async::wasm_safe::{Ps, mcp};
 }

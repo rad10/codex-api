@@ -16,10 +16,10 @@ use crate::client::{
 };
 
 #[cfg(feature = "async")]
-pub use r#async::settings;
+pub use r#async::{Accounts, settings};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Accounts
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Accounts
     for CodexClient<Auth, Acc, U>
 {
     async fn account_settings(&self, user_id: Uuid) -> Result<Self::Response, Self::ApiError>
@@ -31,7 +31,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Account
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Accounts
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Accounts
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn account_settings(&self, user_id: Uuid) -> Result<Self::Response, Self::ApiError>
@@ -48,10 +48,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, Uuid, r#async};
 
-    pub use r#async::thread_safe::settings;
+    pub use r#async::thread_safe::{Accounts, settings};
 
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Accounts for CodexClient<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Accounts
+        for CodexClient<Auth, Acc, U>
     {
         async fn account_settings(&self, user_id: Uuid) -> Result<Self::Response, Self::ApiError>
         where
@@ -62,8 +62,8 @@ pub mod thread_safe {
     }
 
     #[cfg(feature = "middleware")]
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Accounts for CodexMiddleware<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Accounts
+        for CodexMiddleware<Auth, Acc, U>
     {
         async fn account_settings(&self, user_id: Uuid) -> Result<Self::Response, Self::ApiError>
         where
@@ -78,5 +78,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::settings;
+    pub use r#async::wasm_safe::{Accounts, settings};
 }

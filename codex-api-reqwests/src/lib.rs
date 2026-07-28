@@ -12,3 +12,11 @@ pub mod response;
 pub mod wham;
 
 pub use reqwest::IntoUrl;
+
+#[cfg(feature = "async")]
+pub use codex_api_lib::r#async::CodexApi as AsyncCodexApi;
+
+#[cfg(feature = "threaded")]
+pub use codex_api_lib::r#async::{
+    thread_safe::CodexApi as CodexApiThreadSafe, wasm_safe::CodexApi as CodexApiWasmSafe,
+};

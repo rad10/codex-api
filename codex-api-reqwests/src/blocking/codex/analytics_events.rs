@@ -1,5 +1,4 @@
-use codex_api_lib::codex::analytics_events::sync::AnalyticsEvents;
-pub use codex_api_lib::codex::analytics_events::sync::events;
+pub use codex_api_lib::codex::analytics_events::sync::{AnalyticsEvents, events};
 use reqwest::IntoUrl;
 
 use crate::client::{

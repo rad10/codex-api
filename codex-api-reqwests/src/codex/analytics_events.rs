@@ -14,10 +14,10 @@ use crate::client::{
 };
 
 #[cfg(feature = "async")]
-pub use r#async::events;
+pub use r#async::{AnalyticsEvents, events};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::AnalyticsEvents
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEvents
     for CodexClient<Auth, Acc, U>
 {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
@@ -29,7 +29,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Analyti
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::AnalyticsEvents
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AnalyticsEvents
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
@@ -46,10 +46,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
-    pub use r#async::thread_safe::events;
+    pub use r#async::thread_safe::{AnalyticsEvents, events};
 
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::AnalyticsEvents for CodexClient<Auth, Acc, U>
+        AnalyticsEvents for CodexClient<Auth, Acc, U>
     {
         async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -61,7 +61,7 @@ pub mod thread_safe {
 
     #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::AnalyticsEvents for CodexMiddleware<Auth, Acc, U>
+        AnalyticsEvents for CodexMiddleware<Auth, Acc, U>
     {
         async fn codex_analytics_events_events(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -76,5 +76,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::events;
+    pub use r#async::wasm_safe::{AnalyticsEvents, events};
 }

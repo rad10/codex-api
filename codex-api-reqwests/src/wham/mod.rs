@@ -17,12 +17,10 @@ use crate::client::{
 pub mod profiles;
 
 #[cfg(feature = "async")]
-pub use r#async::{rate_limit_reset_credits, usage};
+pub use r#async::{Wham, rate_limit_reset_credits, usage};
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
-    for CodexClient<Auth, Acc, U>
-{
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Wham for CodexClient<Auth, Acc, U> {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
     where
         Self::Response: AsyncTryInto<String>,
@@ -39,7 +37,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
 }
 
 #[cfg(feature = "middleware")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Wham
     for CodexMiddleware<Auth, Acc, U>
 {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
@@ -63,10 +61,10 @@ pub mod thread_safe {
     use super::CodexMiddleware;
     use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
-    pub use r#async::thread_safe::{rate_limit_reset_credits, usage};
+    pub use r#async::thread_safe::{Wham, rate_limit_reset_credits, usage};
 
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Wham for CodexClient<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Wham
+        for CodexClient<Auth, Acc, U>
     {
         async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -84,8 +82,8 @@ pub mod thread_safe {
     }
 
     #[cfg(feature = "middleware")]
-    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-        r#async::thread_safe::Wham for CodexMiddleware<Auth, Acc, U>
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync> Wham
+        for CodexMiddleware<Auth, Acc, U>
     {
         async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
         where
@@ -107,5 +105,5 @@ pub mod thread_safe {
 pub mod wasm_safe {
     use super::r#async;
 
-    pub use r#async::wasm_safe::{rate_limit_reset_credits, usage};
+    pub use r#async::wasm_safe::{Wham, rate_limit_reset_credits, usage};
 }

@@ -2,8 +2,7 @@ use crate::client::{
     blocking::CodexClient,
     traits::{CodexAccountId, CodexAuthorization},
 };
-use codex_api_lib::plugins::sync::Plugins;
-pub use codex_api_lib::plugins::sync::featured;
+pub use codex_api_lib::plugins::sync::{Plugins, featured};
 use reqwest::IntoUrl;
 
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Plugins
