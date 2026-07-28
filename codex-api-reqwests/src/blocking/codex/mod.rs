@@ -1,4 +1,4 @@
-use std::io::{BufRead, BufReader};
+use std::{io::{BufRead, BufReader}, iter};
 
 pub use codex_api_lib::codex::sync::{models, responses};
 use codex_api_lib::codex::{
@@ -112,12 +112,11 @@ impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
     fn try_from(value: BlockingApiResponse) -> Result<Self, Self::Error> {
         // Split the full response into double lines
 
-        let reader = CombineLines {
-            inner: BufReader::new(reqwest::blocking::Response::from(value)).lines(),
-            func: |lines: &mut std::io::Lines<BufReader<reqwest::blocking::Response>>| {
-                let mut line_data = Vec::new();
+        let mut response_lines = BufReader::new(reqwest::blocking::Response::from(value)).lines();
+        let reader = iter::from_fn(|| {
+            let mut line_data = Vec::new();
 
-                while let Some(line) = lines.next() {
+                while let Some(line) = response_lines.next() {
                     match line {
                         Ok(data) if data.is_empty() => break,
                         Ok(data) => line_data.push(data),
@@ -125,8 +124,7 @@ impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
                     }
                 }
                 (!line_data.is_empty()).then(|| Ok(line_data.concat()))
-            },
-        };
+        });
 
         reader
             .map(|event| match event {
@@ -142,19 +140,6 @@ impl TryFrom<BlockingApiResponse> for Vec<ResponseEvent> {
                     })
             })
             .collect::<Result<Vec<_>, _>>()
-    }
-}
-
-struct CombineLines<I, U, F: FnMut(&mut I) -> Option<U>> {
-    inner: I,
-    func: F,
-}
-
-impl<I, U, F: FnMut(&mut I) -> Option<U>> Iterator for CombineLines<I, U, F> {
-    type Item = U;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        (self.func)(&mut self.inner)
     }
 }
 
