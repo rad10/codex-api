@@ -1,3 +1,6 @@
+#[cfg(feature = "sync")]
+pub mod blocking;
+
 pub mod accounts;
 pub mod client;
 pub mod codex;

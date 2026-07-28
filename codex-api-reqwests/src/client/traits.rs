@@ -13,7 +13,7 @@ pub trait CodexAuthorization: Display {
     }
 
     /// Provides a function to directly convert into a header value
-    /// 
+    ///
     /// Doesn't need to be implemented often, but is helpful when its possible
     /// to have a more optimized approach
     fn as_header(&self) -> Option<HeaderValue> {
@@ -46,7 +46,7 @@ pub trait CodexAccountId {
     fn account_id(&self) -> String;
 
     /// Provides a function to directly convert into a header value
-    /// 
+    ///
     /// Doesn't need to be implemented often, but is helpful when its possible
     /// to have a more optimized approach
     fn as_header(&self) -> Option<HeaderValue> {

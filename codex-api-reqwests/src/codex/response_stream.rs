@@ -9,11 +9,11 @@ use codex_api_types::{
 };
 use serde_json::Value;
 
-pub(super) struct StreamEvent {
+pub(crate) struct StreamEvent {
     /// Contains the contents in "event"
     event: String,
     /// Contains the contents in "data"
-    pub(super) data: ResponsesStreamEvent,
+    pub(crate) data: ResponsesStreamEvent,
 }
 
 impl FromStr for StreamEvent {
