@@ -6,9 +6,12 @@ use std::{
 };
 
 use http::StatusCode;
+use reqwest::Error;
+#[cfg(feature = "async")]
+use reqwest::Response;
 #[cfg(feature = "sync")]
 use reqwest::blocking;
-use reqwest::{Error, Response};
+
 use serde::de::DeserializeOwned;
 
 use crate::error::ParsingError;

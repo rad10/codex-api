@@ -1,22 +1,27 @@
 #[cfg(feature = "async")]
-use codex_api_lib::AsyncTryInto;
-use codex_api_lib::wham;
+use async_from::AsyncTryInto;
+#[cfg(feature = "async")]
+use codex_api_lib::wham::r#async;
+#[cfg(feature = "async")]
 use reqwest::IntoUrl;
 
-#[cfg(all(feature = "async", feature = "middleware"))]
+#[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
-#[cfg(feature = "sync")]
-use crate::client::blocking;
+#[cfg(feature = "async")]
 use crate::client::{
     CodexClient,
     traits::{CodexAccountId, CodexAuthorization},
 };
 
+#[cfg(feature = "async")]
 pub mod profiles;
 
 #[cfg(feature = "async")]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-    wham::r#async::Wham for CodexClient<Auth, Acc, U>
+pub use r#async::{rate_limit_reset_credits, usage};
+
+#[cfg(feature = "async")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
+    for CodexClient<Auth, Acc, U>
 {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -33,9 +38,9 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
     }
 }
 
-#[cfg(all(feature = "async", feature = "middleware"))]
-impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
-    wham::r#async::Wham for CodexMiddleware<Auth, Acc, U>
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
+    for CodexMiddleware<Auth, Acc, U>
 {
     async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
     where
@@ -52,21 +57,55 @@ impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + S
     }
 }
 
-#[cfg(feature = "sync")]
-impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> wham::sync::Wham
-    for blocking::CodexClient<Auth, Acc, U>
-{
-    fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>,
+#[cfg(feature = "threaded")]
+pub mod thread_safe {
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
+    #[cfg(feature = "middleware")]
+    use super::CodexMiddleware;
+
+    pub use r#async::thread_safe::{rate_limit_reset_credits, usage};
+
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+        r#async::thread_safe::Wham for CodexClient<Auth, Acc, U>
     {
-        todo!()
+        async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
+
+        async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
     }
 
-    fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: TryInto<String>,
+    #[cfg(feature = "middleware")]
+    impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
+        r#async::thread_safe::Wham for CodexMiddleware<Auth, Acc, U>
     {
-        todo!()
+        async fn wham_rate_limit_reset_credits(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
+
+        async fn wham_usage(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
     }
+}
+
+#[cfg(feature = "threaded")]
+pub mod wasm_safe {
+    use super::r#async;
+
+    pub use r#async::wasm_safe::{rate_limit_reset_credits, usage};
 }

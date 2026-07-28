@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-from = { version = "^0.1", git = "https://github.com/rad10/async-convert.git", default-features = false, optional = true }
 codex-api-lib = { version = "^0.1", path = "../codex-api-lib", default-features = false }
 codex-api-types = { version = "^0.1", path = "../codex-api-types", default-features = false, features = ["serde"] }
 http = { version = "^1", default-features = false }
@@ -17,9 +18,10 @@ uuid = { version = "^1", default-features = false, features = ["v4"] }
 
 [features]
 sync = ["codex-api-lib/sync", "reqwest/blocking"]
-async = ["codex-api-lib/async"]
-boxed = ["async", "codex-api-lib/boxed"]
+async = ["codex-api-lib/async", "dep:async-from"]
+threaded = ["async", "codex-api-lib/threaded", "async-from/wasm"]
+dynamic = ["async", "codex-api-lib/boxed"]
 # Reqwest features
 native-tls = ["reqwest/native-tls"]
 rustls-tls = ["reqwest/rustls", "reqwest-middleware?/rustls"]
-middleware = ["dep:reqwest-middleware"]
+middleware = ["async", "dep:reqwest-middleware"]
