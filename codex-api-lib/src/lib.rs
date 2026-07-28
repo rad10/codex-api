@@ -1,6 +1,3 @@
-#[cfg(feature = "async")]
-use wasm_not_send_sync::WasmNotSend;
-
 pub mod accounts;
 pub mod codex;
 pub mod connectors;
@@ -79,11 +76,13 @@ pub mod boxed {
 
 #[cfg(feature = "async")]
 pub use async_from::{AsyncFrom, AsyncInto, AsyncTryFrom, AsyncTryInto};
+#[cfg(feature = "threaded")]
+use wasm_not_send_sync::WasmNotSend;
 
 // Creating a type for async functions
-#[cfg(feature = "async")]
+#[cfg(feature = "threaded")]
 pub trait FutureNotSend: Future + WasmNotSend {}
-#[cfg(feature = "async")]
+#[cfg(feature = "threaded")]
 impl<T: Future + WasmNotSend> FutureNotSend for T {}
 
 /// Functions and types that will be common amongst all API calls

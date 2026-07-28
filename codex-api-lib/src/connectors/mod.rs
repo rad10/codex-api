@@ -20,6 +20,7 @@ pub mod r#async {
 
     impl<T: ApiCommon + Directory> Connectors for T {}
 
+    #[cfg(feature = "threaded")]
     pub mod thread_safe {
         use crate::connectors::directory::r#async::thread_safe::Directory;
 
@@ -29,6 +30,7 @@ pub mod r#async {
         impl<T: ApiCommon + Directory> Connectors for T {}
     }
 
+    #[cfg(feature = "threaded")]
     pub mod wasm_safe {
         use crate::connectors::directory::r#async::wasm_safe::Directory;
 
