@@ -170,6 +170,7 @@ dependencies = [
 name = "codex-api-reqwests"
 version = "0.1.0"
 dependencies = [
+ "async-from",
  "codex-api-lib",
  "codex-api-types",
  "http",
