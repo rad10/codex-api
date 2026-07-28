@@ -25,7 +25,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Ps
 {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -36,16 +37,17 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Ps
 {
     async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
     #[cfg(feature = "middleware")]
     use super::CodexMiddleware;
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
     pub use r#async::thread_safe::mcp;
 
@@ -54,20 +56,22 @@ pub mod thread_safe {
     {
         async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
     }
 
-#[cfg(feature = "middleware")]
+    #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Ps for CodexMiddleware<Auth, Acc, U>
     {
         async fn ps_mcp(&self) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: async_from::AsyncTryInto<String> {
-        todo!()
-    }
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
     }
 }
 

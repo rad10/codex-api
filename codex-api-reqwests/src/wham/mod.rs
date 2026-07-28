@@ -59,9 +59,9 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Wham
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
     #[cfg(feature = "middleware")]
     use super::CodexMiddleware;
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
     pub use r#async::thread_safe::{rate_limit_reset_credits, usage};
 

@@ -22,7 +22,8 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Profile
 {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -33,42 +34,41 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Profile
 {
     async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
     #[cfg(feature = "middleware")]
     use super::CodexMiddleware;
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
     pub use r#async::thread_safe::me;
 
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Profiles for CodexClient<Auth, Acc, U>
     {
-        async fn wham_profiles_me(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+        async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
     }
 
-#[cfg(feature = "middleware")]
+    #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Profiles for CodexMiddleware<Auth, Acc, U>
     {
-        async fn wham_profiles_me(
-        &self,
-    ) -> Result<Self::Response, Self::ApiError>
-    where
-        Self::Response: async_from::AsyncTryInto<String> {
-        todo!()
-    }
+        async fn wham_profiles_me(&self) -> Result<Self::Response, Self::ApiError>
+        where
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
+            todo!()
+        }
     }
 }
 

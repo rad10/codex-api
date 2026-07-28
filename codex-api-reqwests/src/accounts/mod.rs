@@ -44,9 +44,9 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Account
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async, Uuid};
     #[cfg(feature = "middleware")]
     use super::CodexMiddleware;
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, Uuid, r#async};
 
     pub use r#async::thread_safe::settings;
 
@@ -61,7 +61,7 @@ pub mod thread_safe {
         }
     }
 
-#[cfg(feature = "middleware")]
+    #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Accounts for CodexMiddleware<Auth, Acc, U>
     {

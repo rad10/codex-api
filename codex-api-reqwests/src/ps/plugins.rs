@@ -22,19 +22,22 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Plugins
 {
     async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 
     async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 
     async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
@@ -45,84 +48,81 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> r#async::Plugins
 {
     async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 
     async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 
     async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
     where
-        Self::Response: AsyncTryInto<String> {
+        Self::Response: AsyncTryInto<String>,
+    {
         todo!()
     }
 }
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
     #[cfg(feature = "middleware")]
     use super::CodexMiddleware;
+    use super::{CodexAccountId, CodexAuthorization, CodexClient, IntoUrl, r#async};
 
     pub use r#async::thread_safe::{installed, list, suggested};
 
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Plugins for CodexClient<Auth, Acc, U>
     {
-        async fn ps_plugins_installed(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+        async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
-    
-        async fn ps_plugins_list(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+
+        async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
-    
-        async fn ps_plugins_suggested(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+
+        async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
     }
 
-#[cfg(feature = "middleware")]
+    #[cfg(feature = "middleware")]
     impl<Auth: CodexAuthorization + Sync, Acc: CodexAccountId + Sync, U: IntoUrl + Sync>
         r#async::thread_safe::Plugins for CodexMiddleware<Auth, Acc, U>
     {
-        async fn ps_plugins_installed(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+        async fn ps_plugins_installed(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
-    
-        async fn ps_plugins_list(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+
+        async fn ps_plugins_list(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
-    
-        async fn ps_plugins_suggested(
-            &self,
-        ) -> Result<Self::Response, Self::ApiError>
+
+        async fn ps_plugins_suggested(&self) -> Result<Self::Response, Self::ApiError>
         where
-            Self::Response: async_from::AsyncTryInto<String> {
+            Self::Response: async_from::AsyncTryInto<String>,
+        {
             todo!()
         }
     }

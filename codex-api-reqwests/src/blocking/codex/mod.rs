@@ -12,7 +12,10 @@ use crate::{
     client::{
         blocking::CodexClient,
         traits::{CodexAccountId, CodexAuthorization},
-    }, codex::{CODEX_VERSION, response_stream}, error::ParsingError, response::BlockingApiResponse,
+    },
+    codex::{CODEX_VERSION, response_stream},
+    error::ParsingError,
+    response::BlockingApiResponse,
 };
 pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
 
