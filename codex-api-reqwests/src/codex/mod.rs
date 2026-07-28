@@ -6,6 +6,8 @@ use codex_api_lib::{AsyncTryFrom, AsyncTryInto};
 #[cfg(feature = "async")]
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 #[cfg(feature = "async")]
+use futures::{AsyncBufReadExt, StreamExt, TryStreamExt, stream::try_unfold};
+#[cfg(feature = "async")]
 use http::{HeaderValue, StatusCode};
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
@@ -250,34 +252,39 @@ impl AsyncTryFrom<ApiResponse> for ModelsResponse {
     }
 }
 
+#[cfg(feature = "async")]
 async fn api_response_to_response_event(
     value: ApiResponse,
 ) -> Result<Vec<ResponseEvent>, response_stream::ResponsesError> {
-    CombineLines {
-        inner: reqwest::Response::from(value)
-            .text()
-            .await?
-            .lines()
-            .map(|line| line.to_owned()),
-        func: |line_iter| {
-            let mut lines = Vec::new();
+    try_unfold(
+        reqwest::Response::from(value)
+            .bytes_stream()
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .into_async_read()
+            .lines(),
+        async |mut line_stream| {
+            let mut event_string = Vec::new();
 
-            while let Some(line) = line_iter.next().filter(|s| !s.is_empty()) {
-                lines.push(line);
+            while let Some(line) = line_stream.next().await {
+                let clean_data = line?;
+                if clean_data.is_empty() {
+                    break;
+                } else {
+                    event_string.push(clean_data);
+                }
             }
-            (!lines.is_empty()).then(|| lines.concat())
+            Ok((!event_string.is_empty()).then(|| (event_string.concat(), line_stream)))
         },
-    }
-    .map(|event| {
-        event
-            .parse()
-            .map(|data: response_stream::StreamEvent| data.data)
-            .and_then(response_stream::process_responses_event)
-            .and_then(|processing| {
-                processing.ok_or(response_stream::ResponsesError::InvalidResponseStream)
-            })
+    )
+    .map_err(|e| response_stream::ResponsesError::IO(e))
+    .and_then(async |s| s.parse())
+    .map_ok(|data: response_stream::StreamEvent| data.data)
+    .and_then(async |event| response_stream::process_responses_event(event))
+    .and_then(async |processing| {
+        processing.ok_or(response_stream::ResponsesError::InvalidResponseStream)
     })
-    .collect::<Result<Vec<_>, _>>()
+    .try_collect()
+    .await
 }
 
 #[cfg(feature = "async")]
@@ -286,21 +293,6 @@ impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
         api_response_to_response_event(value).await
-    }
-}
-
-#[cfg(feature = "async")]
-struct CombineLines<I, U, F: FnMut(&mut I) -> Option<U>> {
-    inner: I,
-    func: F,
-}
-
-#[cfg(feature = "async")]
-impl<I, U, F: FnMut(&mut I) -> Option<U>> Iterator for CombineLines<I, U, F> {
-    type Item = U;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        (self.func)(&mut self.inner)
     }
 }
 
