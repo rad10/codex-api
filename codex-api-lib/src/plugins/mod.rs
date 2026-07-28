@@ -14,11 +14,19 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn featured<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn featured_response<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.plugins_featured()
+    }
+
+    pub fn featured<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.plugins_featured()?.try_into().map_err(E::from)
     }
 }
 
@@ -35,7 +43,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn featured<C: Plugins>(
+    pub fn featured_response<C: Plugins>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -44,8 +52,23 @@ pub mod r#async {
         client.plugins_featured()
     }
 
+    pub async fn featured<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .plugins_featured()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use super::{ApiCommon, AsyncTryInto};
 
         pub trait Plugins: ApiCommon {
@@ -58,7 +81,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn featured<C: Plugins>(
+        pub fn featured_response<C: Plugins>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -66,10 +89,25 @@ pub mod r#async {
         {
             client.plugins_featured()
         }
+
+        pub async fn featured<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .plugins_featured()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::FutureNotSend;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -84,13 +122,26 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn featured<C: Plugins>(
+        pub fn featured_response<C: Plugins>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.plugins_featured()
+        }
+
+        pub async fn featured<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .plugins_featured()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -122,6 +173,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -147,9 +199,24 @@ pub mod boxed {
         }
     }
 
-    pub async fn events<R: AsyncTryInto<String>, E>(
+    pub async fn events_response<R: AsyncTryInto<String>, E>(
         client: &dyn Plugins<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.plugins_featured().await
+    }
+
+    pub async fn events<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Plugins<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .plugins_featured()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

@@ -15,11 +15,19 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn mcp<C: Ps>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn mcp_response<C: Ps>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.ps_mcp()
+    }
+
+    pub fn mcp<C: Ps, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.ps_mcp()?.try_into().map_err(E::from)
     }
 }
 
@@ -35,15 +43,30 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn mcp<C: Ps>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn mcp_response<C: Ps>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
         client.ps_mcp()
     }
 
+    pub async fn mcp<C: Ps, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .ps_mcp()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use crate::plugins::r#async::thread_safe::Plugins;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -55,7 +78,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn mcp<C: Ps>(
+        pub fn mcp_response<C: Ps>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -63,10 +86,25 @@ pub mod r#async {
         {
             client.ps_mcp()
         }
+
+        pub async fn mcp<C: Ps, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .ps_mcp()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::{FutureNotSend, plugins::r#async::wasm_safe::Plugins};
 
         use super::{ApiCommon, AsyncTryInto};
@@ -78,13 +116,26 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn mcp<C: Ps>(
+        pub fn mcp_response<C: Ps>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.ps_mcp()
+        }
+
+        pub async fn mcp<C: Ps, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .ps_mcp()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -112,6 +163,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -136,9 +188,24 @@ pub mod boxed {
         }
     }
 
-    pub async fn mcp<R: AsyncTryInto<String>, E>(
+    pub async fn mcp_response<R: AsyncTryInto<String>, E>(
         client: &dyn Ps<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.ps_mcp().await
+    }
+
+    pub async fn mcp<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Ps<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .ps_mcp()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

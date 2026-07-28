@@ -22,7 +22,7 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn installed<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn installed_response<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -30,7 +30,7 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn list<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn list_response<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -38,11 +38,35 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn suggested<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn suggested_response<C: Plugins>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.ps_plugins_suggested()
+    }
+
+    pub fn installed<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.ps_plugins_installed()?.try_into().map_err(E::from)
+    }
+
+    pub fn list<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.ps_plugins_list()?.try_into().map_err(E::from)
+    }
+
+    pub fn suggested<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.ps_plugins_suggested()?.try_into().map_err(E::from)
     }
 }
 
@@ -66,7 +90,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn installed<C: Plugins>(
+    pub fn installed_response<C: Plugins>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -76,7 +100,9 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn list<C: Plugins>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn list_response<C: Plugins>(
+        client: &C,
+    ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
@@ -84,7 +110,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn suggested<C: Plugins>(
+    pub fn suggested_response<C: Plugins>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -93,8 +119,49 @@ pub mod r#async {
         client.ps_plugins_suggested()
     }
 
+    pub async fn installed<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .ps_plugins_installed()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn list<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .ps_plugins_list()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn suggested<C: Plugins, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .ps_plugins_suggested()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use super::{ApiCommon, AsyncTryInto};
 
         pub trait Plugins: ApiCommon {
@@ -118,7 +185,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn installed<C: Plugins>(
+        pub fn installed_response<C: Plugins>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -128,7 +195,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list<C: Plugins>(
+        pub fn list_response<C: Plugins>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -138,7 +205,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn suggested<C: Plugins>(
+        pub fn suggested_response<C: Plugins>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -146,10 +213,51 @@ pub mod r#async {
         {
             client.ps_plugins_suggested()
         }
+
+        pub async fn installed<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_installed()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn list<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_list()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn suggested<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_suggested()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::FutureNotSend;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -175,7 +283,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn installed<C: Plugins>(
+        pub fn installed_response<C: Plugins>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
@@ -185,7 +293,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list<C: Plugins>(
+        pub fn list_response<C: Plugins>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
@@ -195,13 +303,52 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn suggested<C: Plugins>(
+        pub fn suggested_response<C: Plugins>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.ps_plugins_suggested()
+        }
+
+        pub async fn installed<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_installed()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn list<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_list()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn suggested<C: Plugins, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .ps_plugins_suggested()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -269,6 +416,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -315,21 +463,66 @@ pub mod boxed {
         }
     }
 
-    pub async fn installed<R: AsyncTryInto<String>, E>(
+    pub async fn installed_response<R: AsyncTryInto<String>, E>(
         client: &dyn Plugins<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.ps_plugins_installed().await
     }
 
-    pub async fn list<R: AsyncTryInto<String>, E>(
+    pub async fn list_response<R: AsyncTryInto<String>, E>(
         client: &dyn Plugins<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.ps_plugins_list().await
     }
 
-    pub async fn suggested<R: AsyncTryInto<String>, E>(
+    pub async fn suggested_response<R: AsyncTryInto<String>, E>(
         client: &dyn Plugins<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.ps_plugins_suggested().await
+    }
+
+    pub async fn installed<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Plugins<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .ps_plugins_installed()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn list<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Plugins<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .ps_plugins_list()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn suggested<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Plugins<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .ps_plugins_suggested()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

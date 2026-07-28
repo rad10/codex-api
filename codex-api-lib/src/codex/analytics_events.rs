@@ -12,11 +12,23 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn events<C: AnalyticsEvents>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn events_response<C: AnalyticsEvents>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.codex_analytics_events_events()
+    }
+
+    #[inline]
+    pub fn events<C: AnalyticsEvents, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client
+            .codex_analytics_events_events()?
+            .try_into()
+            .map_err(E::from)
     }
 }
 
@@ -32,7 +44,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn events<C: AnalyticsEvents>(
+    pub fn events_response<C: AnalyticsEvents>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -41,8 +53,23 @@ pub mod r#async {
         client.codex_analytics_events_events()
     }
 
+    pub async fn events<C: AnalyticsEvents, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .codex_analytics_events_events()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use super::{ApiCommon, AsyncTryInto};
 
         pub trait AnalyticsEvents: ApiCommon {
@@ -54,7 +81,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn events<C: AnalyticsEvents>(
+        pub fn events_response<C: AnalyticsEvents>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -62,10 +89,25 @@ pub mod r#async {
         {
             client.codex_analytics_events_events()
         }
+
+        pub async fn events<C: AnalyticsEvents, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .codex_analytics_events_events()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::FutureNotSend;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -79,13 +121,26 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn events<C: AnalyticsEvents>(
+        pub fn events_response<C: AnalyticsEvents>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.codex_analytics_events_events()
+        }
+
+        pub async fn events<C: AnalyticsEvents, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .codex_analytics_events_events()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -117,6 +172,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -141,9 +197,24 @@ pub mod boxed {
         }
     }
 
-    pub async fn events<R: AsyncTryInto<String>, E>(
+    pub async fn events_response<R: AsyncTryInto<String>, E>(
         client: &dyn AnalyticsEvents<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.codex_analytics_events_events().await
+    }
+
+    pub async fn events<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn AnalyticsEvents<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .codex_analytics_events_events()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

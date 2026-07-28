@@ -17,7 +17,7 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn list<C: Directory>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn list_response<C: Directory>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
@@ -25,11 +25,33 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn list_workspace<C: Directory>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn list_workspace_response<C: Directory>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.connectors_directory_list_workspace()
+    }
+
+    pub fn list<C: Directory, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client
+            .connectors_directory_list()?
+            .try_into()
+            .map_err(E::from)
+    }
+
+    pub fn list_workspace<C: Directory, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client
+            .connectors_directory_list_workspace()?
+            .try_into()
+            .map_err(E::from)
     }
 }
 
@@ -51,7 +73,9 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn list<C: Directory>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn list_response<C: Directory>(
+        client: &C,
+    ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
@@ -59,7 +83,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn list_workspace<C: Directory>(
+    pub fn list_workspace_response<C: Directory>(
         client: &C,
     ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
@@ -68,8 +92,36 @@ pub mod r#async {
         client.connectors_directory_list_workspace()
     }
 
+    pub async fn list<C: Directory, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .connectors_directory_list()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn list_workspace<C: Directory, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String> + AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        client
+            .connectors_directory_list_workspace()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use super::{ApiCommon, AsyncTryInto};
 
         pub trait Directory: ApiCommon {
@@ -87,7 +139,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list<C: Directory>(
+        pub fn list_response<C: Directory>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -97,7 +149,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list_workspace<C: Directory>(
+        pub fn list_workspace_response<C: Directory>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -105,10 +157,38 @@ pub mod r#async {
         {
             client.connectors_directory_list_workspace()
         }
+
+        pub async fn list<C: Directory, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .connectors_directory_list()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn list_workspace<C: Directory, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .connectors_directory_list_workspace()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::FutureNotSend;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -128,7 +208,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list<C: Directory>(
+        pub fn list_response<C: Directory>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>>
         where
@@ -138,13 +218,39 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn list_workspace<C: Directory>(
+        pub fn list_workspace_response<C: Directory>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.connectors_directory_list_workspace()
+        }
+
+        pub async fn list<C: Directory, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .connectors_directory_list()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn list_workspace<C: Directory, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .connectors_directory_list_workspace()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -194,6 +300,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -233,15 +340,45 @@ pub mod boxed {
         }
     }
 
-    pub async fn list<R: AsyncTryInto<String>, E>(
+    pub async fn list_response<R: AsyncTryInto<String>, E>(
         client: &dyn Directory<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.connectors_directory_list().await
     }
 
-    pub async fn list_workspace<R: AsyncTryInto<String>, E>(
+    pub async fn list_workspace_response<R: AsyncTryInto<String>, E>(
         client: &dyn Directory<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.connectors_directory_list_workspace().await
+    }
+
+    pub async fn list<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Directory<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .connectors_directory_list()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn list_workspace<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Directory<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .connectors_directory_list_workspace()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

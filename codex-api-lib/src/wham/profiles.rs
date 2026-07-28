@@ -12,11 +12,19 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn me<C: Profiles>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn me_response<C: Profiles>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<String>,
     {
         client.wham_profiles_me()
+    }
+
+    pub fn me<C: Profiles, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: TryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<String>>::Error>,
+    {
+        client.wham_profiles_me()?.try_into().map_err(E::from)
     }
 }
 
@@ -32,15 +40,29 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn me<C: Profiles>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn me_response<C: Profiles>(
+        client: &C,
+    ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<String>,
     {
         client.wham_profiles_me()
     }
 
+    pub async fn me<C: Profiles, E>(client: &C) -> Result<String, E>
+    where
+        C::Response: AsyncTryInto<String>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<String>>::Error>,
+    {
+        AsyncTryInto::async_try_into(client.wham_profiles_me().await?)
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use super::{ApiCommon, AsyncTryInto};
 
         pub trait Profiles: ApiCommon {
@@ -52,7 +74,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn me<C: Profiles>(
+        pub fn me_response<C: Profiles>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -60,10 +82,25 @@ pub mod r#async {
         {
             client.wham_profiles_me()
         }
+
+        pub async fn me<C: Profiles, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoThreadSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoThreadSafe<String>>::Error>,
+        {
+            client
+                .wham_profiles_me()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::FutureNotSend;
 
         use super::{ApiCommon, AsyncTryInto};
@@ -77,13 +114,26 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn me<C: Profiles>(
+        pub fn me_response<C: Profiles>(
             client: &C,
         ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<String>,
         {
             client.wham_profiles_me()
+        }
+
+        pub async fn me<C: Profiles, E>(client: &C) -> Result<String, E>
+        where
+            C::Response: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+            E: From<C::ApiError> + From<<C::Response as AsyncTryIntoWasmSafe<String>>::Error>,
+        {
+            client
+                .wham_profiles_me()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -115,6 +165,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use wasm_not_send_sync::WasmNotSync;
 
@@ -139,9 +190,24 @@ pub mod boxed {
         }
     }
 
-    pub async fn me<R: AsyncTryInto<String>, E>(
+    pub async fn me_response<R: AsyncTryInto<String>, E>(
         client: &dyn Profiles<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.wham_profiles_me().await
+    }
+
+    pub async fn me<
+        R: AsyncTryInto<String> + AsyncTryIntoWasmSafe<String>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<String>>::Error>,
+    >(
+        client: &dyn Profiles<Response = R, ApiError = Re>,
+    ) -> Result<String, E> {
+        client
+            .wham_profiles_me()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }

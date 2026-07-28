@@ -36,7 +36,7 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn models<C: Codex>(client: &C) -> Result<C::Response, C::ApiError>
+    pub fn models_response<C: Codex>(client: &C) -> Result<C::Response, C::ApiError>
     where
         C::Response: TryInto<ModelsResponse>,
     {
@@ -44,7 +44,7 @@ pub mod sync {
     }
 
     #[inline]
-    pub fn responses<C: Codex>(
+    pub fn responses_response<C: Codex>(
         client: &C,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
@@ -54,14 +54,38 @@ pub mod sync {
     {
         client.codex_responses(request, options)
     }
+
+    pub fn models<C: Codex, E>(client: &C) -> Result<ModelsResponse, E>
+    where
+        C::Response: TryInto<ModelsResponse>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<ModelsResponse>>::Error>,
+    {
+        client.codex_models()?.try_into().map_err(Into::into)
+    }
+
+    pub fn responses<C: Codex, E>(
+        client: &C,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Vec<ResponseEvent>, E>
+    where
+        C::Response: TryInto<Vec<ResponseEvent>>,
+        E: From<C::ApiError> + From<<C::Response as TryInto<Vec<ResponseEvent>>>::Error>,
+    {
+        client
+            .codex_responses(request, options)?
+            .try_into()
+            .map_err(Into::into)
+    }
 }
 
 #[cfg(feature = "async")]
 pub mod r#async {
+    use async_from::AsyncTryInto;
     use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
 
     use crate::{
-        ApiCommon, AsyncTryInto,
+        ApiCommon,
         codex::{ResponsesOptions, analytics_events::r#async::AnalyticsEvents},
     };
 
@@ -83,7 +107,9 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn models<C: Codex>(client: &C) -> impl Future<Output = Result<C::Response, C::ApiError>>
+    pub fn models_response<C: Codex>(
+        client: &C,
+    ) -> impl Future<Output = Result<C::Response, C::ApiError>>
     where
         C::Response: AsyncTryInto<ModelsResponse>,
     {
@@ -91,7 +117,7 @@ pub mod r#async {
     }
 
     #[inline]
-    pub fn responses<C: Codex>(
+    pub fn responses_response<C: Codex>(
         client: &C,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
@@ -102,8 +128,40 @@ pub mod r#async {
         client.codex_responses(request, options)
     }
 
+    pub async fn models<C: Codex, E>(client: &C) -> Result<ModelsResponse, E>
+    where
+        C::Response: AsyncTryInto<ModelsResponse>,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<ModelsResponse>>::Error>,
+    {
+        client
+            .codex_models()
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn responses<C: Codex, E>(
+        client: &C,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Vec<ResponseEvent>, E>
+    where
+        C::Response: AsyncTryInto<Vec<ResponseEvent>> + Send,
+        E: From<C::ApiError> + From<<C::Response as AsyncTryInto<Vec<ResponseEvent>>>::Error>,
+    {
+        client
+            .codex_responses(request, options)
+            .await?
+            .async_try_into()
+            .await
+            .map_err(E::from)
+    }
+
     #[cfg(feature = "threaded")]
     pub mod thread_safe {
+        use async_from::thread_safe::AsyncTryIntoThreadSafe;
+
         use crate::codex::analytics_events::r#async::thread_safe::AnalyticsEvents;
 
         use super::{
@@ -130,7 +188,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn models<C: Codex>(
+        pub fn models_response<C: Codex>(
             client: &C,
         ) -> impl Future<Output = Result<C::Response, C::ApiError>> + Send
         where
@@ -140,7 +198,7 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn responses<C: Codex>(
+        pub fn responses_response<C: Codex>(
             client: &C,
             request: ResponsesApiRequest,
             options: ResponsesOptions,
@@ -150,10 +208,47 @@ pub mod r#async {
         {
             client.codex_responses(request, options)
         }
+
+        pub async fn models<C: Codex, E>(client: &C) -> Result<ModelsResponse, E>
+        where
+            C::Response:
+                AsyncTryInto<ModelsResponse> + AsyncTryIntoThreadSafe<ModelsResponse> + Send,
+            E: From<C::ApiError>
+                + From<<C::Response as AsyncTryIntoThreadSafe<ModelsResponse>>::Error>,
+        {
+            client
+                .codex_models()
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn responses<C: Codex, E>(
+            client: &C,
+            request: ResponsesApiRequest,
+            options: ResponsesOptions,
+        ) -> Result<Vec<ResponseEvent>, E>
+        where
+            C::Response: AsyncTryInto<Vec<ResponseEvent>>
+                + AsyncTryIntoThreadSafe<Vec<ResponseEvent>>
+                + Send,
+            E: From<C::ApiError>
+                + From<<C::Response as AsyncTryIntoThreadSafe<Vec<ResponseEvent>>>::Error>,
+        {
+            client
+                .codex_responses(request, options)
+                .await?
+                .async_try_into_threaded()
+                .await
+                .map_err(E::from)
+        }
     }
 
     #[cfg(feature = "threaded")]
     pub mod wasm_safe {
+        use async_from::wasm_safe::AsyncTryIntoWasmSafe;
+
         use crate::{FutureNotSend, codex::analytics_events::r#async::wasm_safe::AnalyticsEvents};
 
         use super::{
@@ -165,7 +260,7 @@ pub mod r#async {
             /// Collects models from Codex's library
             fn codex_models(
                 &self,
-            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>> + Send
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
             where
                 Self::Response: AsyncTryInto<ModelsResponse>;
 
@@ -174,15 +269,15 @@ pub mod r#async {
                 &self,
                 request: ResponsesApiRequest,
                 options: ResponsesOptions,
-            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>> + Send
+            ) -> impl FutureNotSend<Output = Result<Self::Response, Self::ApiError>>
             where
                 Self::Response: AsyncTryInto<Vec<ResponseEvent>>;
         }
 
         #[inline]
-        pub fn models<C: Codex>(
+        pub fn models_response<C: Codex>(
             client: &C,
-        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>> + Send
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<ModelsResponse>,
         {
@@ -190,15 +285,48 @@ pub mod r#async {
         }
 
         #[inline]
-        pub fn responses<C: Codex>(
+        pub fn responses_response<C: Codex>(
             client: &C,
             request: ResponsesApiRequest,
             options: ResponsesOptions,
-        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>> + Send
+        ) -> impl FutureNotSend<Output = Result<C::Response, C::ApiError>>
         where
             C::Response: AsyncTryInto<Vec<ResponseEvent>>,
         {
             client.codex_responses(request, options)
+        }
+
+        pub async fn models<C: Codex, E>(client: &C) -> Result<ModelsResponse, E>
+        where
+            C::Response: AsyncTryInto<ModelsResponse> + AsyncTryIntoWasmSafe<ModelsResponse>,
+            E: From<C::ApiError>
+                + From<<C::Response as AsyncTryIntoWasmSafe<ModelsResponse>>::Error>,
+        {
+            client
+                .codex_models()
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
+        }
+
+        pub async fn responses<C: Codex, E>(
+            client: &C,
+            request: ResponsesApiRequest,
+            options: ResponsesOptions,
+        ) -> Result<Vec<ResponseEvent>, E>
+        where
+            C::Response:
+                AsyncTryInto<Vec<ResponseEvent>> + AsyncTryIntoWasmSafe<Vec<ResponseEvent>>,
+            E: From<C::ApiError>
+                + From<<C::Response as AsyncTryIntoWasmSafe<Vec<ResponseEvent>>>::Error>,
+        {
+            client
+                .codex_responses(request, options)
+                .await?
+                .async_try_into_wasm()
+                .await
+                .map_err(E::from)
         }
 
         // Blanket implementation based on arch
@@ -252,6 +380,7 @@ pub mod r#async {
 
 #[cfg(feature = "boxed")]
 pub mod boxed {
+    use async_from::wasm_safe::AsyncTryIntoWasmSafe;
     use async_trait::async_trait;
     use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
     use wasm_not_send_sync::WasmNotSync;
@@ -301,18 +430,50 @@ pub mod boxed {
         }
     }
 
-    pub async fn models<R: AsyncTryInto<ModelsResponse>, E>(
+    pub async fn models_response<R: AsyncTryInto<ModelsResponse>, E>(
         client: &dyn Codex<Response = R, ApiError = E>,
     ) -> Result<R, E> {
         client.codex_models().await
     }
 
-    pub async fn responses<R: AsyncTryInto<Vec<ResponseEvent>>, E>(
+    pub async fn responses_response<R: AsyncTryInto<Vec<ResponseEvent>>, E>(
         client: &dyn Codex<Response = R, ApiError = E>,
         request: ResponsesApiRequest,
         options: ResponsesOptions,
     ) -> Result<R, E> {
         client.codex_responses(request, options).await
+    }
+
+    pub async fn models<
+        R: AsyncTryInto<ModelsResponse> + AsyncTryIntoWasmSafe<ModelsResponse>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<ModelsResponse>>::Error>,
+    >(
+        client: &dyn Codex<Response = R, ApiError = Re>,
+    ) -> Result<ModelsResponse, E> {
+        client
+            .codex_models()
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
+    }
+
+    pub async fn responses<
+        R: AsyncTryInto<Vec<ResponseEvent>> + AsyncTryIntoWasmSafe<Vec<ResponseEvent>>,
+        Re,
+        E: From<Re> + From<<R as AsyncTryIntoWasmSafe<Vec<ResponseEvent>>>::Error>,
+    >(
+        client: &dyn Codex<Response = R, ApiError = Re>,
+        request: ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Vec<ResponseEvent>, E> {
+        client
+            .codex_responses(request, options)
+            .await?
+            .async_try_into_wasm()
+            .await
+            .map_err(E::from)
     }
 }
 
