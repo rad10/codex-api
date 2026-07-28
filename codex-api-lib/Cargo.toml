@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-from = { version = "^0.1", git = "https://github.com/rad10/async-convert.git", default-features = false, optional = true }
 async-trait = { version = "^0", default-features = false, optional = true }
 codex-api-types = { version = "^0.1", path = "../codex-api-types", default-features = false }
 http = { version = "^1", default-features = false }
@@ -16,6 +17,6 @@ default = ["std", "js"]
 std = ["http/std"]
 js = ["uuid/js"]
 sync = []
-async = ["dep:wasm-not-send-sync"]
-threaded = ["async", "dep:wasm-not-send-sync"]
+async = ["dep:async-from"]
+threaded = ["async", "dep:wasm-not-send-sync", "async-from/wasm"]
 boxed = ["async", "threaded", "dep:async-trait"]
