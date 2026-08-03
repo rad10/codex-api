@@ -49,6 +49,11 @@ impl ApiResponse {
             self.deserialize_data().await.map_err(Into::into)
         }
     }
+
+    /// Removes this wrapper and produces the inner [`Response`] value
+    pub fn to_response(self) -> Response {
+        self.0
+    }
 }
 
 #[cfg(feature = "sync")]
@@ -77,6 +82,11 @@ impl BlockingApiResponse {
         } else {
             self.deserialize_data().map_err(Into::into)
         }
+    }
+
+    /// Removes this wrapper and produces the inner [`Response`] value
+    pub fn to_response(self) -> blocking::Response {
+        self.0
     }
 }
 
