@@ -122,11 +122,7 @@ impl CodexAccountId for String {
     }
 
     fn as_header(&self) -> Option<HeaderValue> {
-        let mut header: Option<HeaderValue> = self.parse().ok();
-        if let Some(header_data) = &mut header {
-            header_data.set_sensitive(true)
-        }
-        header
+        self.parse().ok()
     }
 }
 
@@ -134,11 +130,19 @@ impl CodexAccountId for &str {
     fn account_id(&self) -> String {
         self.to_string()
     }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        self.parse().ok()
+    }
 }
 
 impl CodexAccountId for Cow<'_, str> {
     fn account_id(&self) -> String {
         self.to_string()
+    }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        self.parse().ok()
     }
 }
 
