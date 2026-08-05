@@ -92,7 +92,7 @@ impl CodexAuthorization for &str {
     }
 }
 
-impl<'a> CodexAuthorization for Cow<'a, str> {
+impl CodexAuthorization for Cow<'_, str> {
     fn authorization(&self) -> String {
         self.to_string()
     }
@@ -120,13 +120,13 @@ impl CodexAccountId for String {
     }
 }
 
-impl<'a> CodexAccountId for &'a str {
+impl CodexAccountId for &str {
     fn account_id(&self) -> String {
         self.to_string()
     }
 }
 
-impl<'a> CodexAccountId for Cow<'a, str> {
+impl CodexAccountId for Cow<'_, str> {
     fn account_id(&self) -> String {
         self.to_string()
     }
