@@ -32,7 +32,9 @@ pub trait CodexAuthorization: Display {
             "The \"authorization\" function needs to include bearer at the beginning in order to satisfy API requirements"
         );
         // Adding auth string to header
-        if let Some(auth_header) = self.as_header() {
+        if let Some(mut auth_header) = self.as_header() {
+            auth_header.set_sensitive(true);
+
             headers.insert(AUTHORIZATION, auth_header);
         }
     }
@@ -75,6 +77,14 @@ impl Default for NoAccountId {
 impl CodexAuthorization for String {
     fn authorization(&self) -> String {
         self.clone()
+    }
+
+    fn as_header(&self) -> Option<HeaderValue> {
+        let mut header: Option<HeaderValue> = self.parse().ok();
+        if let Some(header_data) = &mut header {
+            header_data.set_sensitive(true)
+        }
+        header
     }
 }
 
