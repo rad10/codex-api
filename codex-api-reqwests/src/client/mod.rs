@@ -261,6 +261,33 @@ impl<A: CodexAuthorization + Default, C: CodexAccountId> Default
         }
     }
 }
+
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AsRef<Client>
+    for CodexClient<Auth, Acc, U>
+{
+    fn as_ref(&self) -> &Client {
+        &self.client
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AsRef<ClientWithMiddleware>
+    for CodexMiddleware<Auth, Acc, U>
+{
+    fn as_ref(&self) -> &ClientWithMiddleware {
+        &self.client
+    }
+}
+
+#[cfg(feature = "middleware")]
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AsRef<Client>
+    for CodexMiddleware<Auth, Acc, U>
+{
+    fn as_ref(&self) -> &Client {
+        self.client.as_ref()
+    }
+}
+
 /// Contains the client used for sync calls
 #[cfg(feature = "sync")]
 pub mod blocking {
@@ -391,6 +418,14 @@ pub mod blocking {
                 account_id: None,
                 extra_headers: HeaderMap::new(),
             }
+        }
+    }
+
+    impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> AsRef<Client>
+        for CodexClient<Auth, Acc, U>
+    {
+        fn as_ref(&self) -> &Client {
+            &self.client
         }
     }
 }

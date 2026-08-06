@@ -3,6 +3,7 @@ use codex_api_lib::ApiCommon;
 use codex_api_lib::codex::{ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX, r#async};
 #[cfg(feature = "async")]
 use codex_api_lib::{AsyncTryFrom, AsyncTryInto};
+use codex_api_types::codex::ModelInfo;
 #[cfg(feature = "async")]
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 #[cfg(feature = "async")]
@@ -39,65 +40,94 @@ pub mod response_stream;
 
 pub(crate) const CODEX_VERSION: &'static str = "0.144.6";
 
-#[cfg(feature = "async")]
-fn models_params<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone>(
-    client: &CodexClient<Auth, Acc, U>,
-) -> Result<Request, <CodexClient<Auth, Acc, U> as ApiCommon>::ApiError> {
-    // Creating URL
-    let api_url = client
-        .endpoint
-        .clone()
-        .into_url()?
-        .join([MODULE_CODEX, ENDPOINT_MODELS].join("/").as_str())?;
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait CodexRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
 
-    let mut headers = client.extra_headers.clone();
-    if let Some(account_id) = client.account_id.as_ref() {
-        account_id.add_account_header(&mut headers);
-    }
-    // Creating API call
-    client
-        .client
-        .get(api_url)
-        .bearer_auth(&client.authorization)
-        .headers(headers)
-        .query(&[("client_version", CODEX_VERSION)])
-        .build()
-        .map_err(Into::into)
+    fn codex_models_request(&self) -> Result<Request, Self::BuildError>;
+
+    fn codex_responses_request(
+        &self,
+        request: &ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Request, Self::BuildError>;
+}
+
+pub fn models_request<R: CodexRequest>(client: &R) -> Result<Request, R::BuildError> {
+    client.codex_models_request()
+}
+
+pub fn responses_request<R: CodexRequest>(
+    client: &R,
+    request: &ResponsesApiRequest,
+    options: ResponsesOptions,
+) -> Result<Request, R::BuildError> {
+    client.codex_responses_request(request, options)
 }
 
 #[cfg(feature = "async")]
-fn responses_params<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone>(
-    client: &CodexClient<Auth, Acc, U>,
-    request: &ResponsesApiRequest,
-    options: ResponsesOptions,
-) -> Result<Request, <CodexClient<Auth, Acc, U> as ApiCommon>::ApiError> {
-    // Creating URL
-    let api_url = client
-        .endpoint
-        .clone()
-        .into_url()?
-        .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexRequest
+    for CodexClient<Auth, Acc, U>
+{
+    type BuildError = <Self as ApiCommon>::ApiError;
 
-    let mut headers = client.extra_headers.clone();
-    headers.extend(options.extra_headers);
-    if let Some(account_id) = client.account_id.as_ref() {
-        account_id.add_account_header(&mut headers);
+    fn codex_models_request(&self) -> Result<Request, Self::BuildError> {
+        // Creating URL
+        let api_url = self
+            .endpoint
+            .clone()
+            .into_url()?
+            .join([MODULE_CODEX, ENDPOINT_MODELS].join("/").as_str())?;
+
+        let mut headers = self.extra_headers.clone();
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut headers);
+        }
+        // Creating API call
+        self.client
+            .get(api_url)
+            .bearer_auth(&self.authorization)
+            .headers(headers)
+            .query(&[("client_version", CODEX_VERSION)])
+            .build()
+            .map_err(Into::into)
     }
-    if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
-        headers.insert("x-client-request-id", thread_id);
+
+    fn codex_responses_request(
+        &self,
+        request: &ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Request, Self::BuildError> {
+        // Creating URL
+        let api_url = self
+            .endpoint
+            .clone()
+            .into_url()?
+            .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
+
+        let mut headers = self.extra_headers.clone();
+        headers.extend(options.extra_headers);
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut headers);
+        }
+        if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
+            headers.insert("x-client-request-id", thread_id);
+        }
+        if let Some(subagent) = options.session_source.and_then(subagent_header) {
+            headers.insert("x-openai-subagent", subagent);
+        }
+        // Creating API call
+        self.client
+            .get(api_url)
+            .bearer_auth(&self.authorization)
+            .headers(headers)
+            .json(&request)
+            .build()
+            .map_err(Into::into)
     }
-    if let Some(subagent) = options.session_source.and_then(subagent_header) {
-        headers.insert("x-openai-subagent", subagent);
-    }
-    // Creating API call
-    client
-        .client
-        .get(api_url)
-        .bearer_auth(&client.authorization)
-        .headers(headers)
-        .json(&request)
-        .build()
-        .map_err(Into::into)
 }
 
 #[cfg(feature = "async")]
@@ -109,7 +139,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
         Self::Response: AsyncTryInto<ModelsResponse>,
     {
         // Creating API call
-        let request_data = models_params(self)?;
+        let request_data = self.codex_models_request()?;
 
         // Calling API request
         self.client
@@ -128,7 +158,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
         Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         // Creating API call
-        let request_data = responses_params(self, &request, options)?;
+        let request_data = self.codex_responses_request(&request, options)?;
 
         // Calling API request
         self.client
@@ -140,68 +170,65 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
-fn models_params_middleware<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone>(
-    client: &CodexMiddleware<Auth, Acc, U>,
-) -> Result<Request, <CodexMiddleware<Auth, Acc, U> as ApiCommon>::ApiError> {
-    // Creating URL
-    let api_url = client
-        .endpoint
-        .clone()
-        .into_url()?
-        .join([MODULE_CODEX, ENDPOINT_MODELS].join("/").as_str())?;
+impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexRequest
+    for CodexMiddleware<Auth, Acc, U>
+{
+    type BuildError = <Self as ApiCommon>::ApiError;
 
-    let mut headers = client.extra_headers.clone();
-    if let Some(account_id) = client.account_id.as_ref() {
-        account_id.add_account_header(&mut headers);
-    }
-    // Creating API call
-    client
-        .client
-        .get(api_url)
-        .bearer_auth(&client.authorization)
-        .headers(headers)
-        .query(&[("client_version", CODEX_VERSION)])
-        .build()
-        .map_err(Into::into)
-}
+    fn codex_models_request(&self) -> Result<Request, Self::BuildError> {
+        // Creating URL
+        let api_url = self
+            .endpoint
+            .clone()
+            .into_url()?
+            .join([MODULE_CODEX, ENDPOINT_MODELS].join("/").as_str())?;
 
-#[cfg(all(feature = "async", feature = "middleware"))]
-fn responses_params_middleware<
-    Auth: CodexAuthorization,
-    Acc: CodexAccountId,
-    U: IntoUrl + Clone,
->(
-    client: &CodexMiddleware<Auth, Acc, U>,
-    request: &ResponsesApiRequest,
-    options: ResponsesOptions,
-) -> Result<Request, <CodexMiddleware<Auth, Acc, U> as ApiCommon>::ApiError> {
-    // Creating URL
-    let api_url = client
-        .endpoint
-        .clone()
-        .into_url()?
-        .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
+        let mut headers = self.extra_headers.clone();
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut headers);
+        }
+        // Creating API call
+        self.client
+            .get(api_url)
+            .bearer_auth(&self.authorization)
+            .headers(headers)
+            .query(&[("client_version", CODEX_VERSION)])
+            .build()
+            .map_err(Into::into)
+    }
 
-    let mut headers = client.extra_headers.clone();
-    headers.extend(options.extra_headers);
-    if let Some(account_id) = client.account_id.as_ref() {
-        account_id.add_account_header(&mut headers);
+    fn codex_responses_request(
+        &self,
+        request: &ResponsesApiRequest,
+        options: ResponsesOptions,
+    ) -> Result<Request, Self::BuildError> {
+        // Creating URL
+        let api_url = self
+            .endpoint
+            .clone()
+            .into_url()?
+            .join([MODULE_CODEX, ENDPOINT_RESPONSES].join("/").as_str())?;
+
+        let mut headers = self.extra_headers.clone();
+        headers.extend(options.extra_headers);
+        if let Some(account_id) = self.account_id.as_ref() {
+            account_id.add_account_header(&mut headers);
+        }
+        if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
+            headers.insert("x-client-request-id", thread_id);
+        }
+        if let Some(subagent) = options.session_source.and_then(subagent_header) {
+            headers.insert("x-openai-subagent", subagent);
+        }
+        // Creating API call
+        self.client
+            .get(api_url)
+            .bearer_auth(&self.authorization)
+            .headers(headers)
+            .json(&request)
+            .build()
+            .map_err(Into::into)
     }
-    if let Some(thread_id) = options.thread_id.and_then(|thread| thread.parse().ok()) {
-        headers.insert("x-client-request-id", thread_id);
-    }
-    if let Some(subagent) = options.session_source.and_then(subagent_header) {
-        headers.insert("x-openai-subagent", subagent);
-    }
-    // Creating API call
-    client
-        .client
-        .get(api_url)
-        .bearer_auth(&client.authorization)
-        .headers(headers)
-        .json(&request)
-        .build()
-        .map_err(Into::into)
 }
 
 #[cfg(all(feature = "async", feature = "middleware"))]
@@ -213,7 +240,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
         Self::Response: AsyncTryInto<ModelsResponse>,
     {
         // Creating API call
-        let request_data = models_params_middleware(self)?;
+        let request_data = self.codex_models_request()?;
 
         // Calling API request
         self.client
@@ -232,7 +259,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> Codex
         Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
     {
         // Creating API call
-        let request_data = responses_params_middleware(self, &request, options)?;
+        let request_data = self.codex_responses_request(&request, options)?;
 
         // Calling API request
         self.client
@@ -249,6 +276,15 @@ impl AsyncTryFrom<ApiResponse> for ModelsResponse {
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
         value.deserialize_if_ok(StatusCode::OK).await
+    }
+}
+
+#[cfg(feature = "async")]
+impl AsyncTryFrom<ApiResponse> for Vec<ModelInfo> {
+    type Error = ParsingError;
+
+    async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
+        ModelsResponse::async_try_from(value).await.map(Into::into)
     }
 }
 
@@ -297,7 +333,7 @@ impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
 }
 
 #[cfg(feature = "async")]
-fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
+pub(crate) fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
     match source {
         SessionSource::SubAgent(SubAgentSource::Review) => Some(HeaderValue::from_static("review")),
         SessionSource::SubAgent(SubAgentSource::Compact) => {
@@ -316,14 +352,13 @@ fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
 
 #[cfg(feature = "threaded")]
 pub mod thread_safe {
-    use super::{
-        ApiResponse, AsyncTryInto, CodexAccountId, CodexAuthorization, CodexClient, IntoUrl,
-        ModelsResponse, ParsingError, ResponseEvent, ResponsesApiRequest, ResponsesOptions,
-        StatusCode, api_response_to_response_event, r#async, models_params, response_stream,
-        responses_params,
-    };
     #[cfg(feature = "middleware")]
-    use super::{CodexMiddleware, models_params_middleware, responses_params_middleware};
+    use super::CodexMiddleware;
+    use super::{
+        ApiResponse, AsyncTryInto, CodexAccountId, CodexAuthorization, CodexClient, CodexRequest,
+        IntoUrl, ModelsResponse, ParsingError, ResponseEvent, ResponsesApiRequest,
+        ResponsesOptions, StatusCode, api_response_to_response_event, r#async, response_stream,
+    };
 
     pub use r#async::thread_safe::{Codex, models, responses};
     use async_from::thread_safe::AsyncTryFromThreadSafe;
@@ -336,7 +371,7 @@ pub mod thread_safe {
             Self::Response: AsyncTryInto<ModelsResponse>,
         {
             // Creating API call
-            let request_data = models_params(self)?;
+            let request_data = self.codex_models_request()?;
 
             // Calling API request
             self.client
@@ -355,7 +390,7 @@ pub mod thread_safe {
             Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
         {
             // Creating API call
-            let request_data = responses_params(self, &request, options)?;
+            let request_data = self.codex_responses_request(&request, options)?;
 
             // Calling API request
             self.client
@@ -375,7 +410,7 @@ pub mod thread_safe {
             Self::Response: AsyncTryInto<ModelsResponse>,
         {
             // Creating API call
-            let request_data = models_params_middleware(self)?;
+            let request_data = self.codex_models_request()?;
 
             // Calling API request
             self.client
@@ -394,7 +429,7 @@ pub mod thread_safe {
             Self::Response: AsyncTryInto<Vec<ResponseEvent>>,
         {
             // Creating API call
-            let request_data = responses_params_middleware(self, &request, options)?;
+            let request_data = self.codex_responses_request(&request, options)?;
 
             // Calling API request
             self.client

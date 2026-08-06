@@ -681,6 +681,13 @@ pub struct ModelsResponse {
     pub models: Vec<ModelInfo>,
 }
 
+impl Into<Vec<ModelInfo>> for ModelsResponse {
+    #[inline]
+    fn into(self) -> Vec<ModelInfo> {
+        self.models
+    }
+}
+
 // convert ModelInfo to ModelPreset
 impl From<ModelInfo> for ModelPreset {
     fn from(info: ModelInfo) -> Self {
