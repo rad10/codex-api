@@ -4,6 +4,7 @@ use async_from::AsyncTryInto;
 use codex_api_lib::ps::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
+use reqwest::Request;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
@@ -18,6 +19,16 @@ pub mod plugins;
 
 #[cfg(feature = "async")]
 pub use r#async::{Ps, mcp};
+
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait PsRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
+
+    fn ps_mcp_request(&self) -> Result<Request, Self::BuildError>;
+}
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Ps for CodexClient<Auth, Acc, U> {

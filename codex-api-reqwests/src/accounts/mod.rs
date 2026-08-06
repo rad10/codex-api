@@ -4,6 +4,7 @@ use async_from::AsyncTryInto;
 use codex_api_lib::accounts::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
+use reqwest::Request;
 #[cfg(feature = "async")]
 use uuid::Uuid;
 
@@ -17,6 +18,16 @@ use crate::client::{
 
 #[cfg(feature = "async")]
 pub use r#async::{Accounts, settings};
+
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait AccountsRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
+
+    fn account_settings_request(&self, user_id: Uuid) -> Result<Request, Self::BuildError>;
+}
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Accounts

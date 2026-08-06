@@ -4,6 +4,7 @@ use async_from::AsyncTryInto;
 use codex_api_lib::codex::analytics_events::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
+use reqwest::Request;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
@@ -12,6 +13,16 @@ use crate::client::{
     CodexClient,
     traits::{CodexAccountId, CodexAuthorization},
 };
+
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait AnalyticsEventsRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
+
+    fn codex_analytics_events_events_request(&self) -> Result<Request, Self::BuildError>;
+}
 
 #[cfg(feature = "async")]
 pub use r#async::{AnalyticsEvents, events};

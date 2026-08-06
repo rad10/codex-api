@@ -4,6 +4,7 @@ use async_from::AsyncTryInto;
 use codex_api_lib::connectors::directory::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
+use reqwest::Request;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
@@ -15,6 +16,18 @@ use crate::client::{
 
 #[cfg(feature = "async")]
 pub use r#async::{Directory, list, list_workspace};
+
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait DirectoryRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
+
+    fn connectors_directory_list_request(&self) -> Result<Request, Self::BuildError>;
+
+    fn connectors_directory_list_workspace_request(&self) -> Result<Request, Self::BuildError>;
+}
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Directory

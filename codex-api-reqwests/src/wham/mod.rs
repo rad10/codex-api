@@ -4,6 +4,7 @@ use async_from::AsyncTryInto;
 use codex_api_lib::wham::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
+use reqwest::Request;
 
 #[cfg(feature = "middleware")]
 use crate::client::CodexMiddleware;
@@ -18,6 +19,18 @@ pub mod profiles;
 
 #[cfg(feature = "async")]
 pub use r#async::{Wham, rate_limit_reset_credits, usage};
+
+/// Provides the option to collect the request without sending it yet
+///
+/// This can be useful if you wish to alter or edit the request before sending it
+pub trait WhamRequest {
+    /// Contains the errors that can occur during build
+    type BuildError;
+
+    fn wham_rate_limit_reset_credits_request(&self) -> Result<Request, Self::BuildError>;
+
+    fn wham_usage_request(&self) -> Result<Request, Self::BuildError>;
+}
 
 #[cfg(feature = "async")]
 impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl> Wham for CodexClient<Auth, Acc, U> {
