@@ -1134,6 +1134,28 @@ pub struct ResponsesApiRequest {
     pub client_metadata: Option<HashMap<String, String>>,
 }
 
+impl Default for ResponsesApiRequest {
+    fn default() -> Self {
+        Self {
+            model: Default::default(),
+            instructions: String::new(),
+            input: Default::default(),
+            tools: Default::default(),
+            tool_choice: "auto".to_string(),
+            parallel_tool_calls: true,
+            reasoning: Default::default(),
+            store: Default::default(),
+            stream: true,
+            stream_options: Default::default(),
+            include: Default::default(),
+            service_tier: Default::default(),
+            prompt_cache_key: Default::default(),
+            text: Default::default(),
+            client_metadata: Default::default(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Reasoning {
