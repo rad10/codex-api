@@ -420,9 +420,84 @@ pub mod thread_safe {
             api_response_to_response_event(value).await
         }
     }
+
+    #[cfg(test)]
+    #[cfg(not(target_arch = "wasm32"))]
+    mod test {
+        use crate::codex::test::build_model_async_response;
+
+        use super::ModelsResponse;
+        use async_from::thread_safe::AsyncTryFromThreadSafe;
+
+        #[tokio::test]
+        async fn test_threaded_async_conversions() {
+            let api_response = build_model_async_response();
+
+            // Testing async conversion
+            let model_data = ModelsResponse::async_try_from_threaded(api_response)
+                .await
+                .expect("model should convert as expected");
+
+            assert!(!model_data.models.is_empty());
+        }
+    }
 }
 
 #[cfg(feature = "threaded")]
 pub mod wasm_safe {
     pub use super::r#async::wasm_safe::{Codex, models, responses};
+
+    #[cfg(test)]
+    mod test {
+        use async_from::wasm_safe::AsyncTryFromWasmSafe;
+
+        use super::super::{ModelsResponse, test::build_model_async_response};
+
+        #[tokio::test]
+        async fn test_threaded_async_conversions() {
+            let api_response = build_model_async_response();
+
+            // Testing async conversion
+            let model_data = ModelsResponse::async_try_from_wasm(api_response)
+                .await
+                .expect("model should convert as expected");
+
+            assert!(!model_data.models.is_empty());
+        }
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "async")]
+mod test {
+    use crate::test::mock_data_to_async_response;
+
+    use super::{ApiResponse, AsyncTryFrom, ModelsResponse};
+    use httpmock::HttpMockResponse;
+
+    pub(super) fn build_model_async_response() -> ApiResponse {
+        // Creating fake response to convert into
+        let mock_response = HttpMockResponse::builder()
+            .status(200)
+            .body(
+                "
+        fasdfasd
+        ",
+            )
+            .build();
+
+        mock_data_to_async_response(mock_response)
+    }
+
+    #[tokio::test]
+    async fn test_model_async_conversions() {
+        let api_response = build_model_async_response();
+
+        // Testing async conversion
+        let model_data = ModelsResponse::async_try_from(api_response)
+            .await
+            .expect("model should convert as expected");
+
+        assert!(!model_data.models.is_empty());
+    }
 }

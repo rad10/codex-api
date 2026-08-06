@@ -160,3 +160,22 @@ fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod test {
+    use httpmock::HttpMockResponse;
+
+    use crate::test::mock_data_to_blocking_response;
+
+    #[test]
+    fn test_model_conversion() {
+        let api_response = mock_data_to_blocking_response(
+            HttpMockResponse::builder().status(200).body("body").build(),
+        );
+
+        let model_data = super::ModelsResponse::try_from(api_response)
+            .expect("model should convert as expected");
+
+        assert!(!model_data.models.is_empty());
+    }
+}

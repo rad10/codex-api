@@ -20,3 +20,31 @@ pub use codex_api_lib::r#async::CodexApi as AsyncCodexApi;
 pub use codex_api_lib::r#async::{
     thread_safe::CodexApi as CodexApiThreadSafe, wasm_safe::CodexApi as CodexApiWasmSafe,
 };
+
+#[cfg(test)]
+pub(crate) mod test {
+    use bytes::Bytes;
+    use httpmock::HttpMockResponse;
+
+    use crate::response::{ApiResponse, BlockingApiResponse};
+
+    #[track_caller]
+    #[cfg(feature = "async")]
+    pub(crate) fn mock_data_to_async_response(mock_data: HttpMockResponse) -> ApiResponse {
+        let http_response: http::Response<Bytes> = mock_data
+            .try_into()
+            .expect("Should convert into a response");
+        reqwest::Response::from(http_response).into()
+    }
+
+    #[track_caller]
+    #[cfg(feature = "sync")]
+    pub(crate) fn mock_data_to_blocking_response(
+        mock_data: HttpMockResponse,
+    ) -> BlockingApiResponse {
+        let http_response: http::Response<Bytes> = mock_data
+            .try_into()
+            .expect("Should convert into a response");
+        reqwest::blocking::Response::from(http_response).into()
+    }
+}

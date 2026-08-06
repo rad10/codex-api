@@ -9,6 +9,7 @@ codex-api-lib = { version = "^1.0", path = "../codex-api-lib", default-features 
 codex-api-types = { version = "^0.1", path = "../codex-api-types", default-features = false, features = ["serde"] }
 futures = { version = "^0.3", optional = true, default-features = false }
 http = { version = "^1", default-features = false }
+log = { version = "0.4.33", default-features = false }
 regex-lite = { version = "^0.1", default-features = false, features = ["std", "string"] }
 reqwest = { version = "^0.13", default-features = false, features = ["json", "query"] }
 reqwest-middleware = { version = "^0", default-features = false, optional = true, features = ["json", "query"] }
@@ -29,3 +30,8 @@ dynamic = ["async", "codex-api-lib/boxed"]
 native-tls = ["reqwest/native-tls"]
 rustls-tls = ["reqwest/rustls", "reqwest-middleware?/rustls"]
 middleware = ["async", "dep:reqwest-middleware"]
+
+[dev-dependencies]
+bytes = { version = "1.12.1", default-features = false }
+httpmock = "0.8.3"
+tokio = { version = "1.53.1", default-features = false, features = ["macros"] }
