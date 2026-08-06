@@ -3,6 +3,7 @@ use codex_api_lib::ApiCommon;
 use codex_api_lib::codex::{ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX, r#async};
 #[cfg(feature = "async")]
 use codex_api_lib::{AsyncTryFrom, AsyncTryInto};
+use codex_api_types::codex::ModelInfo;
 #[cfg(feature = "async")]
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 #[cfg(feature = "async")]
@@ -249,6 +250,15 @@ impl AsyncTryFrom<ApiResponse> for ModelsResponse {
 
     async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
         value.deserialize_if_ok(StatusCode::OK).await
+    }
+}
+
+#[cfg(feature = "async")]
+impl AsyncTryFrom<ApiResponse> for Vec<ModelInfo> {
+    type Error = ParsingError;
+
+    async fn try_from(value: ApiResponse) -> Result<Self, Self::Error> {
+        ModelsResponse::async_try_from(value).await.map(Into::into)
     }
 }
 
