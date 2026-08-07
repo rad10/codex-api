@@ -38,7 +38,7 @@ pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequ
 pub mod analytics_events;
 pub mod response_stream;
 
-pub(crate) const CODEX_VERSION: &'static str = "0.144.6";
+pub(crate) const CODEX_VERSION: &'static str = "0.146.1";
 
 /// Provides the option to collect the request without sending it yet
 ///
@@ -121,7 +121,7 @@ impl<Auth: CodexAuthorization, Acc: CodexAccountId, U: IntoUrl + Clone> CodexReq
         }
         // Creating API call
         self.client
-            .get(api_url)
+            .post(api_url)
             .bearer_auth(&self.authorization)
             .headers(headers)
             .json(&request)
