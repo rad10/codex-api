@@ -5,7 +5,7 @@ pub mod plugins;
 pub mod ps;
 pub mod wham;
 
-pub const STANDARD_ENDPOINT: &'static str = "https://chatgpt.com/backend-ui/";
+pub const STANDARD_ENDPOINT: &'static str = "https://chatgpt.com/backend-api/";
 
 #[cfg(feature = "sync")]
 pub mod sync {

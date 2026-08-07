@@ -26,11 +26,6 @@ pub trait CodexAuthorization: Display {
 
     /// Adds the auth token to headers
     fn add_authorization_header(&self, headers: &mut HeaderMap) {
-        // Ensure that authorization begins with "bearer"
-        debug_assert!(
-            self.authorization().starts_with("Bearer "),
-            "The \"authorization\" function needs to include bearer at the beginning in order to satisfy API requirements"
-        );
         // Adding auth string to header
         if let Some(mut auth_header) = self.as_header() {
             auth_header.set_sensitive(true);
@@ -74,47 +69,11 @@ impl Default for NoAccountId {
 }
 
 // Blanket implementations for allowing generic usage
-impl CodexAuthorization for String {
-    fn authorization(&self) -> String {
-        self.clone()
-    }
+impl CodexAuthorization for String {}
 
-    fn as_header(&self) -> Option<HeaderValue> {
-        let mut header: Option<HeaderValue> = self.parse().ok();
-        if let Some(header_data) = &mut header {
-            header_data.set_sensitive(true)
-        }
-        header
-    }
-}
+impl CodexAuthorization for &str {}
 
-impl CodexAuthorization for &str {
-    fn authorization(&self) -> String {
-        self.to_string()
-    }
-
-    fn as_header(&self) -> Option<HeaderValue> {
-        let mut header: Option<HeaderValue> = self.parse().ok();
-        if let Some(header_data) = &mut header {
-            header_data.set_sensitive(true)
-        }
-        header
-    }
-}
-
-impl CodexAuthorization for Cow<'_, str> {
-    fn authorization(&self) -> String {
-        self.to_string()
-    }
-
-    fn as_header(&self) -> Option<HeaderValue> {
-        let mut header: Option<HeaderValue> = self.parse().ok();
-        if let Some(header_data) = &mut header {
-            header_data.set_sensitive(true)
-        }
-        header
-    }
-}
+impl CodexAuthorization for Cow<'_, str> {}
 
 impl CodexAccountId for String {
     fn account_id(&self) -> String {
