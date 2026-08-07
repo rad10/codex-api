@@ -1,22 +1,29 @@
-use codex_api_lib::codex::{
-    ResponsesOptions,
-    r#async::wasm_safe::{models_response, responses_response},
-};
+#[cfg(feature = "async")]
+use codex_api_lib::codex::ResponsesOptions;
 use codex_api_types::{
     codex::{ModelsResponse, ResponsesApiRequest},
     response_item::{ContentItem, ResponseItem},
 };
 
+#[cfg(feature = "async")]
 use crate::create_client;
 
 /// Checks if the model data that OpenAI provides is still accurate
 #[tokio::test]
 #[ignore = "Can only confirm if codex credentials are supplied. This needs to be manual"]
+#[cfg(feature = "async")]
 pub async fn validate_models_response() {
     // Creating client
     let client = create_client();
 
-    let models_handle = models_response(&client);
+    cfg_select! {
+        feature = "threaded" => {
+            let models_handle = codex_api_lib::codex::r#async::wasm_safe::models_response(&client);
+        }
+        _ => {
+            let models_handle = codex_api_lib::codex::r#async::models_response(&client);
+        }
+    }
 
     // Checking that response worked as intended
     let models_response = models_handle
@@ -48,6 +55,7 @@ pub async fn validate_models_response() {
 /// Checks if the model data that OpenAI provides is still accurate
 #[tokio::test]
 #[ignore = "Can only confirm if codex credentials are supplied. This needs to be manual"]
+#[cfg(feature = "async")]
 pub async fn validate_responses_response() {
     // Creating client
     let client = create_client();
@@ -68,7 +76,14 @@ pub async fn validate_responses_response() {
 
     let options = ResponsesOptions::default();
 
-    let responses_handle = responses_response(&client, request, options);
+    cfg_select! {
+        feature = "threaded" => {
+            let responses_handle = codex_api_lib::codex::r#async::wasm_safe::responses_response(&client, request, options);
+        }
+        _ => {
+            let responses_handle = codex_api_lib::codex::r#async::responses_response(&client, request, options);
+        }
+    }
 
     // Checking that response worked as intended
     let responses_response = responses_handle
