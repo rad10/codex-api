@@ -19,7 +19,7 @@ pub const CODEX_AUTHORIZATION_TOKEN: Option<&'static str> =
     option_env!("CODEX_AUTHORIZATION_TOKEN");
 
 pub fn codex_authorization_token() -> Option<String> {
-    env::var("CODEX_AUTHORIZATION_KEY").ok()
+    env::var("CODEX_AUTHORIZATION_TOKEN").ok()
 }
 
 pub fn codex_account_id() -> Option<Uuid> {
