@@ -26,11 +26,11 @@ pub(crate) mod test {
     use bytes::Bytes;
     use httpmock::HttpMockResponse;
 
-    use crate::response::{ApiResponse, BlockingApiResponse};
-
     #[track_caller]
     #[cfg(feature = "async")]
-    pub(crate) fn mock_data_to_async_response(mock_data: HttpMockResponse) -> ApiResponse {
+    pub(crate) fn mock_data_to_async_response(
+        mock_data: HttpMockResponse,
+    ) -> crate::response::ApiResponse {
         let http_response: http::Response<Bytes> = mock_data
             .try_into()
             .expect("Should convert into a response");
@@ -41,7 +41,7 @@ pub(crate) mod test {
     #[cfg(feature = "sync")]
     pub(crate) fn mock_data_to_blocking_response(
         mock_data: HttpMockResponse,
-    ) -> BlockingApiResponse {
+    ) -> crate::response::BlockingApiResponse {
         let http_response: http::Response<Bytes> = mock_data
             .try_into()
             .expect("Should convert into a response");

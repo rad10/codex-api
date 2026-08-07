@@ -1,6 +1,8 @@
 pub mod directory;
+#[cfg(feature = "async")]
 use codex_api_lib::connectors::r#async;
 
+#[cfg(feature = "async")]
 pub use r#async::Connectors;
 
 #[cfg(feature = "threaded")]

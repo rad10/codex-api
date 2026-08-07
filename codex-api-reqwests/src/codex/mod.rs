@@ -1,14 +1,13 @@
 use codex_api_lib::ApiCommon;
+use codex_api_lib::codex::ResponsesOptions;
 #[cfg(feature = "async")]
 use codex_api_lib::codex::{ENDPOINT_MODELS, ENDPOINT_RESPONSES, MODULE_CODEX, r#async};
 #[cfg(feature = "async")]
 use codex_api_lib::{AsyncTryFrom, AsyncTryInto};
-use codex_api_types::codex::ModelInfo;
-#[cfg(feature = "async")]
+use codex_api_types::codex::{ModelInfo, ResponsesApiRequest};
 use codex_api_types::codex::{SessionSource, SubAgentSource};
 #[cfg(feature = "async")]
 use futures::{AsyncBufReadExt, StreamExt, TryStreamExt, stream::try_unfold};
-#[cfg(feature = "async")]
 use http::{HeaderValue, StatusCode};
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
@@ -29,11 +28,10 @@ use crate::{
 
 #[cfg(feature = "async")]
 pub use codex_api_lib::codex::{
-    ResponsesOptions,
     r#async::{Codex, models, responses},
 };
 #[cfg(feature = "async")]
-pub use codex_api_types::codex::{ModelsResponse, ResponseEvent, ResponsesApiRequest};
+pub use codex_api_types::codex::{ModelsResponse, ResponseEvent};
 
 pub mod analytics_events;
 pub mod response_stream;
@@ -332,7 +330,6 @@ impl AsyncTryFrom<ApiResponse> for Vec<ResponseEvent> {
     }
 }
 
-#[cfg(feature = "async")]
 pub(crate) fn subagent_header(source: SessionSource) -> Option<HeaderValue> {
     match source {
         SessionSource::SubAgent(SubAgentSource::Review) => Some(HeaderValue::from_static("review")),

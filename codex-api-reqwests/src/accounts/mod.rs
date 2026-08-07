@@ -5,7 +5,6 @@ use codex_api_lib::accounts::r#async;
 #[cfg(feature = "async")]
 use reqwest::IntoUrl;
 use reqwest::Request;
-#[cfg(feature = "async")]
 use uuid::Uuid;
 
 #[cfg(feature = "middleware")]
